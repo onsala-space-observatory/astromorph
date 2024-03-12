@@ -77,11 +77,15 @@ def train_single_image(learner, image, optimizer, device="cpu"):
     return learner, loss
 
 
-def train_epoch(learner, data, optimizer, device="cpu"):
+def train_epoch(learner, data, optimizer, device="cpu", writer=None, epoch=0):
 
     total_loss = 0
     batch_loss = None
     batch_size = 64
+
+    epoch_length = len(data) // batch_size
+    base_index = 10**(len(str(epoch_length))+1) * epoch
+
     for i, image in enumerate(tqdm(data)):
         learner, loss = train_single_image(learner, image, optimizer, device)
         batch_loss = batch_loss + loss if batch_loss else loss
@@ -90,6 +94,8 @@ def train_epoch(learner, data, optimizer, device="cpu"):
             batch_loss.backward()
             optimizer.step()
             optimizer.zero_grad()
+            if writer:
+                writer.add_scalar("Batch loss", batch_loss.sum() / batch_size, base_index + (i // batch_size))
             batch_loss = None
 
     return learner, total_loss
@@ -104,17 +110,17 @@ def test_epoch(learner, test_data, device="cpu"):
 
 
 
-def train(model, train_image_list, optimizer, epochs=10, device="cpu", test_image_list=None):
+def train(model, train_image_list, optimizer, epochs=10, device="cpu", test_image_list=None, timestamp=None):
     
-    writer = SummaryWriter(log_dir="runs/")
+    writer = SummaryWriter(log_dir=f"runs/{timestamp}/") if timestamp else SummaryWriter(log_dir=f"runs/")
 
     for t in range(epochs):
         model.train()
-        model, loss = train_epoch(model, train_image_list, optimizer, device)
-        writer.add_scalar("Train loss", loss, t, new_style=True)
+        model, loss = train_epoch(model, train_image_list, optimizer, device, writer=writer, epoch=t+1)
+        writer.add_scalar("Train loss", loss / len(train_image_list), t, new_style=True)
         if test_image_list:
             test_loss = test_epoch(model, test_image_list, device=device)
-            writer.add_scalar("Test loss", test_loss, t, new_style=True)
+            writer.add_scalar("Test loss", test_loss / len(test_image_list), t, new_style=True)
 
     return model
 
@@ -155,7 +161,7 @@ def main(datafile, maskfile, epochs):
 
     start_time = dt.datetime.now().strftime("%Y%m%d_%H%M")
 
-    model = train(learner, train_data, optimizer, epochs=epochs, device=device, test_image_list=test_data)
+    model = train(learner, train_data, optimizer, epochs=epochs, device=device, test_image_list=test_data, timestamp=start_time)
     torch.save(resnet.state_dict(), f"./improved_net_e_{epochs}_{start_time}.pt")
 
 
