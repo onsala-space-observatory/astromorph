@@ -74,18 +74,23 @@ def train_single_image(learner, image, optimizer, device="cpu"):
     learn_image = image.to(device)
 
     loss = learner(learn_image)
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
     return learner, loss
 
 
 def train_epoch(learner, data, optimizer, device="cpu"):
 
     total_loss = 0
-    for image in tqdm(data):
+    batch_loss = None
+    batch_size = 64
+    for i, image in enumerate(tqdm(data)):
         learner, loss = train_single_image(learner, image, optimizer, device)
+        batch_loss = batch_loss + loss if batch_loss else loss
         total_loss += loss.sum()
+        if i % batch_size == 0 and i > 0:
+            batch_loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+            batch_loss = None
 
     return learner, total_loss
 
