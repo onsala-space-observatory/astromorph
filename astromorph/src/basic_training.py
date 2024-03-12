@@ -3,15 +3,17 @@ import datetime as dt
 import random
 from time import perf_counter
 
-import numpy as np
 import torch
 from astropy.io import fits
 from byol_pytorch import BYOL
 from scipy.ndimage import find_objects, label
 from torch import nn
+from torch.utils.tensorboard import SummaryWriter
 from torchvision import models
 from torchvision import transforms as T
 from tqdm import tqdm
+
+from dataset import CloudDataset
 
 
 class RandomApply(nn.Module):
@@ -69,20 +71,7 @@ def sample_unlabelled_images():
 
 
 def train_single_image(learner, image, optimizer, device="cpu"):
-    # Model input has to satisfy two conditions:
-    #   1) multiple images in one go (necessary for projection in BYOL)
-    #   2) three channels per image (ResNet is trained on 3-channel images)
-    # Create two extra axes
-    im1 = np.expand_dims(np.expand_dims(image, axis=0), axis=0)
-    # Create 3 channels by copying the image along axis 1
-    im1 = np.concatenate([im1, im1, im1], axis=1)
-    # Create a diagonally flipped copy of the image,
-    im2 = np.flip(im1, axis=(2, 3))
-    # Concatenate the new image along axis 0
-    images = np.concatenate([im1, im2], axis=0)
-    # images = torch.from_numpy(images).to(device)
-
-    learn_image = torch.from_numpy(images).to(device)
+    learn_image = image.to(device)
 
     loss = learner(learn_image)
     optimizer.zero_grad()
@@ -100,10 +89,27 @@ def train_epoch(learner, data, optimizer, device="cpu"):
 
     return learner, total_loss
 
+def test_epoch(learner, test_data, device="cpu"):
+    loss = 0 
+    with torch.no_grad():
+        for item in test_data:
+            ind_loss = learner(item)
+            loss += ind_loss.sum()
+    return loss
 
-def train(model, image_list, optimizer, epochs=10, device="cpu"):
-    for _ in range(epochs):
-        model, loss = train_epoch(model, image_list, optimizer, device)
+
+
+def train(model, train_image_list, optimizer, epochs=10, device="cpu", test_image_list=None):
+    
+    writer = SummaryWriter(log_dir="runs/")
+
+    for t in range(epochs):
+        model.train()
+        model, loss = train_epoch(model, train_image_list, optimizer, device)
+        writer.add_scalar("Train loss", loss, t, new_style=True)
+        if test_image_list:
+            test_loss = test_epoch(model, test_image_list, device=device)
+            writer.add_scalar("Test loss", test_loss, t, new_style=True)
 
     return model
 
@@ -137,10 +143,14 @@ def main(datafile, maskfile, epochs):
     )
 
     optimizer = torch.optim.Adam(learner.parameters(), lr=3e-4)
-    images = get_objects(datafile, maskfile)
+    all_objects = CloudDataset(datafile=datafile, maskfile=maskfile)
+
+    rng = torch.Generator().manual_seed(42)
+    train_data, test_data = torch.utils.data.random_split(all_objects, [0.8, 0.2], generator=rng)
+
     start_time = dt.datetime.now().strftime("%Y%m%d_%H%M")
 
-    model = train(learner, images, optimizer, epochs=epochs, device=device)
+    model = train(learner, train_data, optimizer, epochs=epochs, device=device, test_image_list=test_data)
     torch.save(resnet.state_dict(), f"./improved_net_e_{epochs}_{start_time}.pt")
 
 
