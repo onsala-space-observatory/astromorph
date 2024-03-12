@@ -142,7 +142,7 @@ def main(datafile, maskfile, epochs):
         augment_fn=augmentation_function,
     )
 
-    optimizer = torch.optim.Adam(learner.parameters(), lr=3e-4)
+    optimizer = torch.optim.Adam(learner.parameters(), lr=3e-5)
     all_objects = CloudDataset(datafile=datafile, maskfile=maskfile)
 
     rng = torch.Generator().manual_seed(42)
