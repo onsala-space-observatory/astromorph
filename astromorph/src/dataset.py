@@ -63,3 +63,12 @@ class CloudDataset(Dataset):
         # images = torch.from_numpy(images).to(device)
 
         return torch.from_numpy(images)
+    
+    @classmethod
+    def make_inferable(cls, image: np.ndarray):
+
+        image = np.expand_dims(np.expand_dims(image, axis=0), axis=0)
+        return np.concatenate([image, image, image], axis=1)
+
+    def get_all_items(self):
+        return [self.make_inferable(image) for image in self.objects]
