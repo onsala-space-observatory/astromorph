@@ -118,13 +118,14 @@ def train(model, train_image_list, optimizer, epochs=10, device="cpu", test_imag
     
     writer = SummaryWriter(log_dir=f"runs/{timestamp}/") if timestamp else SummaryWriter(log_dir=f"runs/")
 
-    for t in range(epochs):
+    for epoch in range(epochs):
         model.train()
-        model, loss = train_epoch(model, train_image_list, optimizer, device, writer=writer, epoch=t+1)
-        writer.add_scalar("Train loss", loss / len(train_image_list), t, new_style=True)
+        model, loss = train_epoch(model, train_image_list, optimizer, device, writer=writer, epoch=epoch+1)
+        writer.add_scalar("Train loss", loss / len(train_image_list), epoch, new_style=True)
         if test_image_list:
             test_loss = test_epoch(model, test_image_list, device=device)
-            writer.add_scalar("Test loss", test_loss / len(test_image_list), t, new_style=True)
+            writer.add_scalar("Test loss", test_loss / len(test_image_list), epoch, new_style=True)
+        torch.save(resnet.state_dict(), f"./improved_net_e_{epoch}_{epochs}_{start_time}.pt")
 
     return model
 
