@@ -105,6 +105,7 @@ def train_epoch(learner, data, optimizer, device="cpu", writer=None, epoch=0):
 def test_epoch(learner, test_data, device="cpu"):
     loss = 0 
     with torch.no_grad():
+        learner.eval()
         for item in test_data:
             item = item[0]
             ind_loss = learner(item)
