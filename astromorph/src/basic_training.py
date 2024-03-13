@@ -137,7 +137,7 @@ def main(datafile, maskfile, epochs):
         else "mps" if torch.backends.mps.is_available() else "cpu"
     )
     device = "cpu"
-    resnet = models.resnet50().to(device)
+    resnet = models.resnet18().to(device)
 
     augmentation_function = torch.nn.Sequential(
         RandomApply(T.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.3),
