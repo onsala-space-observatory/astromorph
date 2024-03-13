@@ -8,6 +8,7 @@ from astropy.io import fits
 from byol_pytorch import BYOL
 from scipy.ndimage import find_objects, label
 from torch import nn
+from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import models
 from torchvision import transforms as T
@@ -87,6 +88,7 @@ def train_epoch(learner, data, optimizer, device="cpu", writer=None, epoch=0):
     base_index = 10**(len(str(epoch_length))+1) * epoch
 
     for i, image in enumerate(tqdm(data)):
+        image = image[0]
         learner, loss = train_single_image(learner, image, optimizer, device)
         batch_loss = batch_loss + loss if batch_loss else loss
         total_loss += loss.sum()
@@ -104,6 +106,7 @@ def test_epoch(learner, test_data, device="cpu"):
     loss = 0 
     with torch.no_grad():
         for item in test_data:
+            item = item[0]
             ind_loss = learner(item)
             loss += ind_loss.sum()
     return loss
@@ -157,8 +160,10 @@ def main(datafile, maskfile, epochs):
     all_objects = CloudDataset(datafile=datafile, maskfile=maskfile)
 
     rng = torch.Generator().manual_seed(42)
-    train_data, test_data = torch.utils.data.random_split(all_objects, [0.8, 0.2], generator=rng)
+    train_dataset, test_dataset = torch.utils.data.random_split(all_objects, [0.8, 0.2], generator=rng)
 
+    train_data = DataLoader(train_dataset, batch_size=1, shuffle=True)
+    test_data = DataLoader(test_dataset, batch_size=1, shuffle=True)
     start_time = dt.datetime.now().strftime("%Y%m%d_%H%M")
 
     model = train(learner, train_data, optimizer, epochs=epochs, device=device, test_image_list=test_data, timestamp=start_time)
