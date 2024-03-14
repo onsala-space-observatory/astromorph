@@ -55,11 +55,17 @@ class CloudDataset(Dataset):
         # Create two extra axes
         im1 = np.expand_dims(np.expand_dims(image, axis=0), axis=0)
         # Create 3 channels by copying the image along axis 1
-        im1 = np.concatenate([im1, im1, im1], axis=1)
+        im_e = np.concatenate([im1, im1, im1], axis=1)
+        im_c2 = np.rot90(im_e, k=2, axes=(2,3))
         # Create a diagonally flipped copy of the image,
-        im2 = np.flip(im1, axis=(2, 3))
+        im_b = np.flip(im_e, axis=(2, 3))
+        im_bc2 = np.rot90(im_b, k=2, axes=(2,3))
         # Concatenate the new image along axis 0
-        images = np.concatenate([im1, im2], axis=0)
+        images = np.concatenate([im_e,
+                                 im_c2, 
+                                 im_b, 
+                                 im_bc2, 
+                                 ], axis=0)
         # images = torch.from_numpy(images).to(device)
 
         return torch.from_numpy(images)
