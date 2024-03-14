@@ -114,7 +114,7 @@ def test_epoch(learner, test_data, device="cpu"):
 
 
 
-def train(model, train_image_list, optimizer, epochs=10, device="cpu", test_image_list=None, timestamp=None):
+def train(model, train_image_list, optimizer, epochs=10, device="cpu", test_image_list=None, timestamp=None, resnet=None):
     
     writer = SummaryWriter(log_dir=f"runs/{timestamp}/") if timestamp else SummaryWriter(log_dir=f"runs/")
 
@@ -125,7 +125,8 @@ def train(model, train_image_list, optimizer, epochs=10, device="cpu", test_imag
         if test_image_list:
             test_loss = test_epoch(model, test_image_list, device=device)
             writer.add_scalar("Test loss", test_loss / len(test_image_list), epoch, new_style=True)
-        torch.save(resnet.state_dict(), f"./improved_net_e_{epoch}_{epochs}_{start_time}.pt")
+        if resnet is not None:
+            torch.save(resnet.state_dict(), f"./improved_net_e_{epoch}_{epochs}_{timestamp}.pt")
 
     return model
 
@@ -168,7 +169,7 @@ def main(datafile, maskfile, epochs):
     test_data = DataLoader(test_dataset, batch_size=1, shuffle=True)
     start_time = dt.datetime.now().strftime("%Y%m%d_%H%M")
 
-    model = train(learner, train_data, optimizer, epochs=epochs, device=device, test_image_list=test_data, timestamp=start_time)
+    model = train(learner, train_data, optimizer, epochs=epochs, device=device, test_image_list=test_data, timestamp=start_time, resnet=resnet)
     torch.save(resnet.state_dict(), f"./improved_net_e_{epochs}_{start_time}.pt")
 
 
