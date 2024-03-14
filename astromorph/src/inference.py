@@ -7,6 +7,7 @@ from byol_pytorch import BYOL
 from tqdm import tqdm
 import numpy as np
 from skimage.transform import resize
+from sklearn import cluster
 
 
 def pad_image_to_square(image):
@@ -74,6 +75,12 @@ def main(datafile, maskfile, model_name):
             embeddings = torch.cat((embeddings, emb), 0)
     print(embeddings.shape)
 
+    print("Clustering embeddings...")
+    clusterer = cluster.KMeans(n_clusters=10)
+    cluster_labels = clusterer.fit_predict(embeddings)
+
+
+
     print("Producing thumbnails...")
     plot_images = [normalize_image(image) for image in images]
 
@@ -84,8 +91,8 @@ def main(datafile, maskfile, model_name):
     ]
     all_ims = torch.cat([torch.from_numpy(ri) for ri in resized])
 
-    writer = SummaryWriter(log_dir="runs/test_projection/")
-    writer.add_embedding(embeddings, label_img=all_ims)
+    writer = SummaryWriter(log_dir="runs/test_projection_quad_labels/")
+    writer.add_embedding(embeddings, label_img=all_ims, metadata=cluster_labels)
 
 
 if __name__ == "__main__":
