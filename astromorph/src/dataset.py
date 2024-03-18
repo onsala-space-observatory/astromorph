@@ -20,13 +20,7 @@ class CloudDataset(Dataset):
         # Reverse byteorder, because otherwise the scipy.ndimage.label cannot deal with it
         mask_data = mask_data.newbyteorder()
 
-        # print("Looking for objects...")
-
-        # t0 = perf_counter()
         labels, n_features = label(mask_data)
-        # t1 = perf_counter()
-
-        # print(f"Found {n_features} objects from mask in {(t1-t0):.3f} s")
 
         # We extract a list with the slices of all the objects
         # xy_slices has datatype List[Tuple[np.slice, np.slice]]
@@ -41,40 +35,82 @@ class CloudDataset(Dataset):
 
         cloud_images = [real_data[xy_slice] for xy_slice in large_object_slices]
 
-        # print(f"Constructed {len(cloud_images)} images...")
         self.objects = cloud_images
 
     def __len__(self):
+        """Return the size of the dataset.
+
+        Returns: the number of objects in the dataset.
+
+        """
         return len(self.objects)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int):
+        """Retrieve the item at index.
+
+        This will retrieve multiple versions of the object:
+            - original
+            - rotated 180 degrees
+            - flipped
+            - flipped and rotated by 180 degrees.
+
+        This is done for data augmentation.
+
+        Args:
+            index: which object to retrieve
+
+        Returns:
+            a 4D torch tensor
+
+        """
         image = self.objects[index]
-        # Model input has to satisfy two conditions:
-        #   1) multiple images in one go (necessary for projection in BYOL)
-        #   2) three channels per image (ResNet is trained on 3-channel images)
-        # Create two extra axes
-        im1 = np.expand_dims(np.expand_dims(image, axis=0), axis=0)
-        # Create 3 channels by copying the image along axis 1
-        im_e = np.concatenate([im1, im1, im1], axis=1)
-        im_c2 = np.rot90(im_e, k=2, axes=(2,3))
-        # Create a diagonally flipped copy of the image,
+
+        # Training the model requires multiple images in a single go, because
+        # this is necessary for the projection in the BYOL architecture.
+        # Since every image has a different size, we do this by creating
+        # multiple copies of each image.
+        # These copies follow the D2 = Z2 x Z2 symmetry group
+
+        im_e = self.make_inferable(image)
+        im_c = np.rot90(im_e, k=2, axes=(2, 3))
         im_b = np.flip(im_e, axis=(2, 3))
-        im_bc2 = np.rot90(im_b, k=2, axes=(2,3))
-        # Concatenate the new image along axis 0
-        images = np.concatenate([im_e,
-                                 im_c2, 
-                                 im_b, 
-                                 im_bc2, 
-                                 ], axis=0)
-        # images = torch.from_numpy(images).to(device)
+        im_bc = np.rot90(im_b, k=2, axes=(2, 3))
+
+        # Concatenate along axis 0 to produce a tensor of shape (4, 3, W, H)
+        images = np.concatenate(
+            [
+                im_e,
+                im_c,
+                im_b,
+                im_bc,
+            ],
+            axis=0,
+        )
 
         return torch.from_numpy(images)
-    
+
     @classmethod
     def make_inferable(cls, image: np.ndarray):
+        """Produce a version of the image that can be run on the inference network
 
+        Args:
+            image: 2D numpy array
+
+        Returns:
+            4D torch Tensor that can be used for inference
+        """
+        # Clip the most extreme values, and convert to logspace for better
+        # detection of faint features
+        image = np.log10(np.clip(image, a_min=1, a_max=100))
+        # Create two extra dimensions
         image = np.expand_dims(np.expand_dims(image, axis=0), axis=0)
+        # Create three channels per image (for RGB values)
         return np.concatenate([image, image, image], axis=1)
 
     def get_all_items(self):
+        """Produce all items as inferable images
+
+        Returns:
+            list of 4D torch Tensors that can be used for inference
+        """
         return [self.make_inferable(image) for image in self.objects]
