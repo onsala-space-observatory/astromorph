@@ -1,12 +1,9 @@
 import argparse
 import datetime as dt
 import random
-from time import perf_counter
 
 import torch
-from astropy.io import fits
 from byol_pytorch import BYOL
-from scipy.ndimage import find_objects, label
 from torch import nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
@@ -27,48 +24,6 @@ class RandomApply(nn.Module):
         if random.random() > self.p:
             return x
         return self.fn(x)
-
-
-def get_objects(datafile: str, maskfile: str):
-    """Retrieve a list of arrays containing image data, based on the raw data and a mask.
-
-    Args:
-        datafile: filename for the real (raw) data
-        maskfile: filename for the mask data
-    """
-    # Read maskdata and real data into numpy array
-    real_data = fits.open(datafile).pop().data
-    mask_data = fits.open(maskfile).pop().data
-    # Reverse byteorder, because otherwise the scipy.ndimage.label cannot deal with it
-    mask_data = mask_data.newbyteorder()
-
-    print("Looking for objects...")
-
-    t0 = perf_counter()
-    labels, n_features = label(mask_data)
-    t1 = perf_counter()
-
-    print(f"Found {n_features} objects from mask in {(t1-t0):.3f} s")
-
-    # We extract a list with the slices of all the objects
-    # xy_slices has datatype List[Tuple[np.slice, np.slice]]
-    xy_slices = find_objects(labels)
-    threshold = 5
-    large_object_slices = [
-        xy_slice
-        for xy_slice in xy_slices
-        if (xy_slice[0].stop - xy_slice[0].start > threshold)
-        and (xy_slice[1].stop - xy_slice[1].start > threshold)
-    ]
-
-    cloud_images = [real_data[xy_slice] for xy_slice in large_object_slices]
-
-    print(f"Constructed {len(cloud_images)} images...")
-    return cloud_images
-
-
-def sample_unlabelled_images():
-    return torch.randn(20, 3, 256, 256)
 
 
 def train_single_image(learner, image, optimizer, device="cpu"):
