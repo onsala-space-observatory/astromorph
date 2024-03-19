@@ -6,7 +6,7 @@ from scipy.ndimage import find_objects, label
 from torch.utils.data import Dataset
 
 
-class CloudDataset(Dataset):
+class MaskedDataset(Dataset):
     def __init__(self, datafile: str, maskfile: str):
         """Retrieve a list of arrays containing image data, based on the raw data and a mask.
 

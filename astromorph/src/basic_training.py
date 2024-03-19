@@ -12,7 +12,7 @@ from torchvision import models
 from torchvision import transforms as T
 from tqdm import tqdm
 
-from dataset import CloudDataset
+from datasets import MaskedDataset
 
 
 class RandomApply(nn.Module):
@@ -218,7 +218,7 @@ def main(datafile: str, maskfile: str, epochs: int):
     optimizer = torch.optim.Adam(learner.parameters(), lr=5e-6)
 
     # Load dataset, do train/test-split, and put into DataLoaders
-    all_objects = CloudDataset(datafile=datafile, maskfile=maskfile)
+    all_objects = MaskedDataset(datafile=datafile, maskfile=maskfile)
 
     rng = torch.Generator().manual_seed(42) # seeded RNG for reproducibility
     train_dataset, test_dataset = torch.utils.data.random_split(

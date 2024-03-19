@@ -1,5 +1,5 @@
 import argparse
-from dataset import CloudDataset
+from datasets import MaskedDataset
 from torchvision import models
 import torch
 from torch.utils.tensorboard import SummaryWriter
@@ -56,7 +56,7 @@ def main(datafile: str, maskfile: str, model_name: str):
         model_name: filename of the trained neural network
     """
     print("Reading data...")
-    ds = CloudDataset(
+    ds = MaskedDataset(
         datafile=datafile,
         maskfile=maskfile,
     )
