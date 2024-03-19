@@ -1,6 +1,7 @@
 import argparse
 import datetime as dt
 import random
+from typing import Callable, Optional
 
 import torch
 from byol_pytorch import BYOL
@@ -15,7 +16,17 @@ from dataset import CloudDataset
 
 
 class RandomApply(nn.Module):
-    def __init__(self, fn, p):
+    """A class to provide a probability-layer in a neural network.
+
+    When added as a layer to a neural network, it has probability _p_ to apply
+    function _fn_ to the input. In other cases it will just forward the input.
+
+    Attributes:
+        fn:
+        p:
+    """
+
+    def __init__(self, fn: Callable, p: float):
         super().__init__()
         self.fn = fn
         self.p = p
@@ -26,73 +37,162 @@ class RandomApply(nn.Module):
         return self.fn(x)
 
 
-def train_single_image(learner, image, optimizer, device="cpu"):
+def train_single_image(learner, image, device="cpu"):
     learn_image = image.to(device)
 
     loss = learner(learn_image)
     return learner, loss
 
 
-def train_epoch(learner, data, optimizer, device="cpu", writer=None, epoch=0):
+def train_epoch(
+    learner: nn.Module,
+    data: DataLoader,
+    optimizer: torch.optim.Optimizer,
+    device: str = "cpu",
+    writer: Optional[SummaryWriter] = None,
+    epoch: int = 0,
+):
+    """Train a model for a single epoch
 
-    total_loss = 0
-    batch_loss = None
+    Args:
+        learner: the model
+        data: training data
+        optimizer: optimizer used for fitting
+        device: device on which the training calculations are run
+        writer: SummaryWriter for TensorBoard logging
+        epoch: the training epoch
+
+    Returns:
+        A tuple of updated learner, and the total training loss
+    """
+    # Set initial conditions
+    total_loss = 0.0
+    batch_loss = None  # batch_loss will be of type torch.nn.loss._Loss
     batch_size = 64
 
+    # Define constants
     epoch_length = len(data) // batch_size
-    base_index = 10**(len(str(epoch_length))+1) * epoch
+    # Separate epochs for intermediate logging
+    base_index = 10 ** (len(str(epoch_length)) + 1) * epoch
 
     for i, image in enumerate(tqdm(data)):
+        # The DataLoader will automatically wrap our data in an extra dimension
         image = image[0]
-        learner, loss = train_single_image(learner, image, optimizer, device)
+
+        # Forward pass
+        learner, loss = train_single_image(learner, image, device)
+
+        # Keep track of batch loss and epoch loss
         batch_loss = batch_loss + loss if batch_loss else loss
         total_loss += loss.sum()
+
+        # Do backwards step after _batch_size_ iterations
         if i % batch_size == 0 and i > 0:
             batch_loss.backward()
             optimizer.step()
             optimizer.zero_grad()
             if writer:
-                writer.add_scalar("Batch loss", batch_loss.sum() / batch_size, base_index + (i // batch_size))
+                writer.add_scalar(
+                    "Batch loss",
+                    batch_loss.sum() / batch_size,
+                    base_index + (i // batch_size),
+                )
             batch_loss = None
 
     return learner, total_loss
 
-def test_epoch(learner, test_data, device="cpu"):
-    loss = 0 
+
+def test_epoch(learner: nn.Module, test_data: DataLoader, device: str = "cpu"):
+    """Calculate test loss on neural network.
+
+    Args:
+        learner: neural network
+        test_data: out of sample data for testing
+        device: device on which calculations take place
+
+    Returns:
+
+    """
+    loss = 0
+    # Use no_grad context manager to prevent keeping track of gradient
     with torch.no_grad():
         learner.eval()
         for item in test_data:
+            # The DataLoader will automatically wrap our data in an extra dimension
             item = item[0]
+
             ind_loss = learner(item)
             loss += ind_loss.sum()
     return loss
 
 
+def train(
+    model: nn.Module,
+    train_data: DataLoader,
+    optimizer: torch.optim.Optimizer,
+    epochs: int = 10,
+    device: str = "cpu",
+    test_data: Optional[DataLoader] = None,
+    timestamp: Optional[str] = None,
+    resnet: Optional[nn.Module] = None,
+):
+    """Train a model
 
-def train(model, train_image_list, optimizer, epochs=10, device="cpu", test_image_list=None, timestamp=None, resnet=None):
+    Args:
+        model: BYOL model to be trained
+        train_data: training data 
+        optimizer: optimizer for finding the best weights and biases
+        epochs: number of epochs to train for 
+        device: device on which to train
+        test_data: data for out-of-sample validation
+        timestamp: timestamp for logging purposes
+        resnet: save this network component of the BYOL network after every epoch
+
+    Returns:
+        a trained model
+    """
+    # Create a writer for TensorBoard logging
+    writer = (
+        SummaryWriter(log_dir=f"runs/{timestamp}/")
+        if timestamp
+        else SummaryWriter(log_dir=f"runs/")
+    )
     
-    writer = SummaryWriter(log_dir=f"runs/{timestamp}/") if timestamp else SummaryWriter(log_dir=f"runs/")
-
     for epoch in range(epochs):
+        # Ensure the model is set to training mode for gradient tracking
         model.train()
-        model, loss = train_epoch(model, train_image_list, optimizer, device, writer=writer, epoch=epoch+1)
-        writer.add_scalar("Train loss", loss / len(train_image_list), epoch, new_style=True)
-        if test_image_list:
-            test_loss = test_epoch(model, test_image_list, device=device)
-            writer.add_scalar("Test loss", test_loss / len(test_image_list), epoch, new_style=True)
+        model, loss = train_epoch(
+            model, train_data, optimizer, device, writer=writer, epoch=epoch + 1
+        )
+        writer.add_scalar("Train loss", loss / len(train_data), epoch, new_style=True)
+        
+        # Out of sample testing
+        if test_data:
+            test_loss = test_epoch(model, test_data, device=device)
+            writer.add_scalar(
+                "Test loss", test_loss / len(test_data), epoch, new_style=True
+            )
+        # Save the network nested in the BYOL
         if resnet is not None:
-            torch.save(resnet.state_dict(), f"./improved_net_e_{epoch}_{epochs}_{timestamp}.pt")
+            torch.save(
+                resnet.state_dict(), f"./improved_net_e_{epoch}_{epochs}_{timestamp}.pt"
+            )
 
     return model
 
 
-def main(datafile, maskfile, epochs):
+def main(datafile: str, maskfile: str, epochs: int):
+    # Use a GPU if available
+    # For now, we default to CPU learning, because the GPU memory overhead 
+    # makes GPU slower than CPU
     device = (
         "cuda"
         if torch.cuda.is_available()
         else "mps" if torch.backends.mps.is_available() else "cpu"
     )
     device = "cpu"
+
+    # Load neural network and augmentation function, and combine into BYOL
     resnet = models.resnet18().to(device)
 
     augmentation_function = torch.nn.Sequential(
@@ -114,18 +214,35 @@ def main(datafile, maskfile, epochs):
         augment_fn=augmentation_function,
     )
 
+    # Create optimizer with the BYOL parameters
     optimizer = torch.optim.Adam(learner.parameters(), lr=5e-6)
+
+    # Load dataset, do train/test-split, and put into DataLoaders
     all_objects = CloudDataset(datafile=datafile, maskfile=maskfile)
 
-    rng = torch.Generator().manual_seed(42)
-    train_dataset, test_dataset = torch.utils.data.random_split(all_objects, [0.8, 0.2], generator=rng)
-
+    rng = torch.Generator().manual_seed(42) # seeded RNG for reproducibility
+    train_dataset, test_dataset = torch.utils.data.random_split(
+        all_objects, [0.8, 0.2], generator=rng
+    )
+    
+    # DataLoaders have batch_size=1, because images have different sizes
     train_data = DataLoader(train_dataset, batch_size=1, shuffle=True)
     test_data = DataLoader(test_dataset, batch_size=1, shuffle=True)
+
+    # Timestamp to identify training runs
     start_time = dt.datetime.now().strftime("%Y%m%d_%H%M")
 
-    model = train(learner, train_data, optimizer, epochs=epochs, device=device, test_image_list=test_data, timestamp=start_time, resnet=resnet)
-    torch.save(resnet.state_dict(), f"./improved_net_e_{epochs}_{start_time}.pt")
+    model = train(
+        learner,
+        train_data,
+        optimizer,
+        epochs=epochs,
+        device=device,
+        test_data=test_data,
+        timestamp=start_time,
+        resnet=resnet,
+    )
+    torch.save(resnet.state_dict(), f"./saved_models/improved_net_e_{epochs}_{start_time}.pt")
 
 
 if __name__ == "__main__":
