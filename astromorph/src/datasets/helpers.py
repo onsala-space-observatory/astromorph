@@ -10,9 +10,6 @@ def make_4D(image: np.ndarray):
     Returns:
         4D numpy array that can be used for inference
     """
-    # Clip the most extreme values, and convert to logspace for better
-    # detection of faint features
-    image = np.log10(np.clip(image, a_min=1, a_max=100))
     # Create two extra dimensions
     image = np.expand_dims(np.expand_dims(image, axis=0), axis=0)
     # Create three channels per image (for RGB values)

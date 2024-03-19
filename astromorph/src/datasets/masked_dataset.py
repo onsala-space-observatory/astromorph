@@ -8,6 +8,20 @@ from torch.utils.data import Dataset
 from .helpers import augment_image, make_4D 
 
 
+def cloud_clipping(image: np.ndarray):
+    """Clip extreme values, and convert to logspace.
+
+    This helps with the detection of faint features.
+
+    Args:
+        image: original image
+
+    Returns:
+        an image with clipped pixel values
+    """
+    return np.log10(np.clip(image, a_min=1, a_max=100))
+
+
 class MaskedDataset(Dataset):
     def __init__(self, datafile: str, maskfile: str):
         """Retrieve a list of arrays containing image data, based on the raw data and a mask.
@@ -37,7 +51,7 @@ class MaskedDataset(Dataset):
 
         cloud_images = [real_data[xy_slice] for xy_slice in large_object_slices]
 
-        self.objects = cloud_images
+        self.objects = [cloud_clipping(image) for image in cloud_images]
 
     def __len__(self):
         """Return the size of the dataset.
