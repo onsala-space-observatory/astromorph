@@ -11,9 +11,9 @@ requirements
 
 ```bash
 # Run this command inside your working directory to create a virtual environment
-> python -m venv .venv
+$ python -m venv .venv
 # The virtual environment is created inside its own subdirectory
-> ls -a
+$ ls -a
 .
 ..
 .venv
@@ -23,25 +23,41 @@ It is very easy to activate this environment, and deactivate it when you no long
 
 ```bash
 # activate the virtual environment
-> source .venv/bin/activate
+$ source .venv/bin/activate
 # deactivate the venv when no longer using it, or switching to a different project
-> deactivate
+$ deactivate
 ```
 
 The next step is to install the dependencies in the virtual environment
 
 ```bash
 # If you have deactivated your venv, make sure to activate it again
-> source .venv/bin/activate
+$ source .venv/bin/activate
 # Install requirements using pip
-> pip install -r requirements
+$ pip install -r requirements
 ```
 
 ## Running
 
 ### Training
 
-For now, the software expects data to be loaded in the following way:
+#### Filelist
+
+Input can be specified as a filelist, which we specify with the `-d` flag.
+Such a filelist can be made using the `find` command line program.
+In the example below, we want to use all the FITS files inside the directory `data`
+that are smaller than 10 MB as input for our model.
+We do this using the following commands:
+
+```bash
+# Find the filenames and store them in data/inputfiles.txt
+$ find data -type f -size -10M -path "**.fits" > data/inputfiles.txt
+$ python astromorph/src/basic_training.py -d data/inputfiles.txt
+```
+
+#### Masked data
+
+When extracting objects from a binary mask, the script expects the following input:
 
 - a single fits file containing all the data
 - a fits file of the same size with a binary mask, where all the object pixels are coded with a `1`
@@ -49,13 +65,15 @@ For now, the software expects data to be loaded in the following way:
 To train the model, just run the following command from the main directory of the repo:
 
 ```bash
-> python astromorph/src/basic_training.py -d <data-file> -m <mask-file>
+python astromorph/src/basic_training.py -d <data-file> -m <mask-file>
 ```
+
+#### Epochs
 
 Optionally, the number of training epochs can be specified with the `-e` flag, with a default of 10.
 
 ```bash
-> python astromorph/src/basic_training.py -d <data-file> -m <mask-file> -e 5
+python astromorph/src/basic_training.py -d <data-file> -m <mask-file> -e 5
 ```
 
 ### Inference
@@ -63,11 +81,11 @@ Optionally, the number of training epochs can be specified with the `-e` flag, w
 To run a trained network on some data, use the following command:
 
 ```bash
-> python astromorph/src/inference.py -d <data-file> -m <mask-file> -n <trained-network-file>
+python astromorph/src/inference.py -d <data-file> -m <mask-file> -n <trained-network-file>
 ```
 
 To then view a visualisation of the embeddings, use TensorBoard with:
 
 ```bash
-> tensorboard --logdir=./runs
+tensorboard --logdir=./runs
 ```
