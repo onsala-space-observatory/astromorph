@@ -56,8 +56,8 @@ class MaskedDataset(Dataset):
     def __len__(self):
         """Return the size of the dataset.
 
-        Returns: the number of objects in the dataset.
-
+        Returns: 
+            the number of objects in the dataset.
         """
         return len(self.objects)
 
@@ -77,7 +77,6 @@ class MaskedDataset(Dataset):
 
         Returns:
             a 4D torch tensor
-
         """
         image = self.objects[index]
 
