@@ -261,6 +261,5 @@ if __name__ == "__main__":
         dataset = MaskedDataset(args.datafile, args.maskfile)
     else:
         dataset = FilelistDataset(args.datafile)
-        print(dataset.filenames[0])
 
     main(dataset, args.epochs)
