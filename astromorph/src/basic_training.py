@@ -175,7 +175,7 @@ def train(
         # Save the network nested in the BYOL
         if resnet is not None:
             torch.save(
-                resnet.state_dict(), f"./improved_net_e_{epoch}_{epochs}_{timestamp}.pt"
+                resnet.state_dict(), f"./saved_models/improved_net_e_{epoch}_{epochs}_{timestamp}.pt"
             )
 
     return model
