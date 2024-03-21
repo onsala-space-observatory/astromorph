@@ -6,13 +6,13 @@ from typing import Callable, Optional
 import torch
 from byol_pytorch import BYOL
 from torch import nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import models
 from torchvision import transforms as T
 from tqdm import tqdm
 
-from datasets import MaskedDataset
+from datasets import MaskedDataset, FilelistDataset
 
 
 class RandomApply(nn.Module):
@@ -68,7 +68,7 @@ def train_epoch(
     # Set initial conditions
     total_loss = 0.0
     batch_loss = None  # batch_loss will be of type torch.nn.loss._Loss
-    batch_size = 64
+    batch_size = 32  # 64
 
     # Define constants
     epoch_length = len(data) // batch_size
@@ -140,9 +140,9 @@ def train(
 
     Args:
         model: BYOL model to be trained
-        train_data: training data 
+        train_data: training data
         optimizer: optimizer for finding the best weights and biases
-        epochs: number of epochs to train for 
+        epochs: number of epochs to train for
         device: device on which to train
         test_data: data for out-of-sample validation
         timestamp: timestamp for logging purposes
@@ -157,7 +157,7 @@ def train(
         if timestamp
         else SummaryWriter(log_dir=f"runs/")
     )
-    
+
     for epoch in range(epochs):
         # Ensure the model is set to training mode for gradient tracking
         model.train()
@@ -165,7 +165,7 @@ def train(
             model, train_data, optimizer, device, writer=writer, epoch=epoch + 1
         )
         writer.add_scalar("Train loss", loss / len(train_data), epoch, new_style=True)
-        
+
         # Out of sample testing
         if test_data:
             test_loss = test_epoch(model, test_data, device=device)
@@ -181,9 +181,9 @@ def train(
     return model
 
 
-def main(datafile: str, maskfile: str, epochs: int):
+def main(full_dataset: Dataset, epochs: int):
     # Use a GPU if available
-    # For now, we default to CPU learning, because the GPU memory overhead 
+    # For now, we default to CPU learning, because the GPU memory overhead
     # makes GPU slower than CPU
     device = (
         "cuda"
@@ -217,14 +217,12 @@ def main(datafile: str, maskfile: str, epochs: int):
     # Create optimizer with the BYOL parameters
     optimizer = torch.optim.Adam(learner.parameters(), lr=5e-6)
 
-    # Load dataset, do train/test-split, and put into DataLoaders
-    all_objects = MaskedDataset(datafile=datafile, maskfile=maskfile)
-
-    rng = torch.Generator().manual_seed(42) # seeded RNG for reproducibility
+    # Do train/test-split, and put into DataLoaders
+    rng = torch.Generator().manual_seed(42)  # seeded RNG for reproducibility
     train_dataset, test_dataset = torch.utils.data.random_split(
-        all_objects, [0.8, 0.2], generator=rng
+        full_dataset, [0.8, 0.2], generator=rng
     )
-    
+
     # DataLoaders have batch_size=1, because images have different sizes
     train_data = DataLoader(train_dataset, batch_size=1, shuffle=True)
     test_data = DataLoader(test_dataset, batch_size=1, shuffle=True)
@@ -242,15 +240,27 @@ def main(datafile: str, maskfile: str, epochs: int):
         timestamp=start_time,
         resnet=resnet,
     )
-    torch.save(resnet.state_dict(), f"./saved_models/improved_net_e_{epochs}_{start_time}.pt")
+    torch.save(
+        resnet.state_dict(), f"./saved_models/improved_net_e_{epochs}_{start_time}.pt"
+    )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog="Astromorph pipeline", description=None, epilog=None
     )
+
     parser.add_argument("-d", "--datafile", help="Define a data file", required=True)
-    parser.add_argument("-m", "--maskfile", help="Specify a mask file", required=True)
+    parser.add_argument(
+        "-m", "--maskfile", help="Specify a mask file"
+    )  # , required=True)
     parser.add_argument("-e", "--epochs", help="Number of epochs", default=10, type=int)
     args = parser.parse_args()
-    main(args.datafile, args.maskfile, args.epochs)
+
+    if args.maskfile:
+        dataset = MaskedDataset(args.datafile, args.maskfile)
+    else:
+        dataset = FilelistDataset(args.datafile)
+        print(dataset.filenames[0])
+
+    main(dataset, args.epochs)
