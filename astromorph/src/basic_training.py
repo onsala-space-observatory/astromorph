@@ -175,7 +175,8 @@ def train(
         # Save the network nested in the BYOL
         if resnet is not None:
             torch.save(
-                resnet.state_dict(), f"./saved_models/improved_net_e_{epoch}_{epochs}_{timestamp}.pt"
+                resnet.state_dict(),
+                f"./saved_models/improved_net_e_{epoch}_{epochs}_{timestamp}.pt",
             )
 
     return model
@@ -251,9 +252,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument("-d", "--datafile", help="Define a data file", required=True)
-    parser.add_argument(
-        "-m", "--maskfile", help="Specify a mask file"
-    )  # , required=True)
+    parser.add_argument("-m", "--maskfile", help="Specify a mask file")
     parser.add_argument("-e", "--epochs", help="Number of epochs", default=10, type=int)
     args = parser.parse_args()
 
