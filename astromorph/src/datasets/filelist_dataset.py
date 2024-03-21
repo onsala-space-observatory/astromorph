@@ -15,7 +15,7 @@ class FilelistDataset(Dataset):
             self.filenames = filelist
         else:
             with open(filelist, "r") as file:
-                self.filenames = [fname.split("\n") for fname in file.readlines()]
+                self.filenames = [fname.strip("\n") for fname in file.readlines()]
 
     def __len__(self):
         return len(self.filenames)
