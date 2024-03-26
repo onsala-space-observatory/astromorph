@@ -13,6 +13,7 @@ from torchvision import transforms as T
 from tqdm import tqdm
 
 from datasets import MaskedDataset, FilelistDataset
+from models import NLayerResnet
 
 
 class RandomApply(nn.Module):
@@ -194,7 +195,7 @@ def main(full_dataset: Dataset, epochs: int):
     device = "cpu"
 
     # Load neural network and augmentation function, and combine into BYOL
-    resnet = models.resnet18(weights="IMAGENET1K_V1").to(device)
+    network = NLayerResnet().to(device)
 
     augmentation_function = torch.nn.Sequential(
         RandomApply(T.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.3),
@@ -208,7 +209,7 @@ def main(full_dataset: Dataset, epochs: int):
     )
 
     learner = BYOL(
-        resnet,
+        network,
         image_size=256,
         hidden_layer="avgpool",
         use_momentum=False,  # turn off momentum in the target encoder

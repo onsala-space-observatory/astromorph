@@ -13,6 +13,7 @@ from sklearn import cluster
 
 # Provide these to the namespace for the read models
 from basic_training import RandomApply, BYOL
+from models import NLayerResnet
 
 
 def pad_image_to_square(image):
@@ -72,7 +73,7 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
 
     print("Calculating embeddings...")
     # embeddings are of dimension 512
-    dim_embeddings = 512
+    dim_embeddings = 64
     embeddings = torch.empty((0, dim_embeddings))
     with torch.no_grad():
         for image in tqdm(images):
