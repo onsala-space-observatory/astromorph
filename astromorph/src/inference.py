@@ -97,8 +97,8 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
     # Concatenate thumbnails into a single tensor for labelling the embeddings
     all_ims = torch.cat([torch.from_numpy(ri) for ri in resized])
 
-    writer.add_embedding(embeddings, label_img=all_ims, metadata=cluster_labels)
     writer = SummaryWriter(log_dir=f"runs/{model_name}/")
+    writer.add_embedding(embeddings, label_img=all_ims, metadata=cluster_labels)
 
 
 if __name__ == "__main__":
