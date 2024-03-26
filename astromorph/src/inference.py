@@ -11,6 +11,9 @@ import numpy as np
 from skimage.transform import resize
 from sklearn import cluster
 
+# Provide these to the namespace for the read models
+from basic_training import RandomApply, BYOL
+
 
 def pad_image_to_square(image):
     """Convert image to a square image.
@@ -62,11 +65,9 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
     images = dataset.get_all_items()
 
     # Loading model
-    model = models.resnet18()
     print(f"Loading pretrained model {model_name}...")
-    model.load_state_dict(torch.load(f"{model_name}"))
 
-    learner = BYOL(model, image_size=256, hidden_layer="avgpool")
+    learner = torch.load(model_name)
     learner.eval()
 
     print("Calculating embeddings...")
@@ -76,7 +77,7 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
     with torch.no_grad():
         for image in tqdm(images):
             proj, emb = learner(torch.from_numpy(image), return_embedding=True)
-            embeddings = torch.cat((embeddings, emb), 0)
+            embeddings = torch.cat((embeddings, emb), dim=0)
 
     print("Clustering embeddings...")
     clusterer = cluster.KMeans(n_clusters=10)

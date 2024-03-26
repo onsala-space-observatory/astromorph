@@ -134,7 +134,7 @@ def train(
     device: str = "cpu",
     test_data: Optional[DataLoader] = None,
     timestamp: Optional[str] = None,
-    resnet: Optional[nn.Module] = None,
+    save_intermediates: bool = False,
 ):
     """Train a model
 
@@ -173,9 +173,9 @@ def train(
                 "Test loss", test_loss / len(test_data), epoch, new_style=True
             )
         # Save the network nested in the BYOL
-        if resnet is not None:
+        if save_intermediates is not None:
             torch.save(
-                resnet.state_dict(),
+                model,
                 f"./saved_models/improved_net_e_{epoch}_{epochs}_{timestamp}.pt",
             )
 
@@ -194,7 +194,7 @@ def main(full_dataset: Dataset, epochs: int):
     device = "cpu"
 
     # Load neural network and augmentation function, and combine into BYOL
-    resnet = models.resnet18().to(device)
+    resnet = models.resnet18(weights="IMAGENET1K_V1").to(device)
 
     augmentation_function = torch.nn.Sequential(
         RandomApply(T.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.3),
@@ -239,11 +239,10 @@ def main(full_dataset: Dataset, epochs: int):
         device=device,
         test_data=test_data,
         timestamp=start_time,
-        resnet=resnet,
+        save_intermediates=True,
     )
-    torch.save(
-        resnet.state_dict(), f"./saved_models/improved_net_e_{epochs}_{start_time}.pt"
-    )
+
+    torch.save(model, f"./saved_models/improved_net_e_{epochs}_{start_time}.pt")
 
 
 if __name__ == "__main__":
