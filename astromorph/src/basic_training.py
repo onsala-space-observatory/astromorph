@@ -233,6 +233,15 @@ def main(full_dataset: Dataset, epochs: int, last_layer: str = "layer4"):
     # Timestamp to identify training runs
     start_time = dt.datetime.now().strftime("%Y%m%d_%H%M")
 
+    # If necessary, create the folder saved_models.
+    # Also, ensure it does not show up in git
+    savedir = "./saved_models"
+    if not os.path.exists(savedir):
+        os.makedirs(savedir)
+        with open(f"{savedir}/.gitignore", "w") as file:
+            lines = [".gitignore\n", "*.pt\n"]
+            file.writelines(lines)
+
     model = train(
         learner,
         train_data,
@@ -243,15 +252,6 @@ def main(full_dataset: Dataset, epochs: int, last_layer: str = "layer4"):
         timestamp=start_time,
         save_intermediates=True,
     )
-
-    # If necessary, create the folder saved_models.
-    # Also, ensure it does not show up in git
-    savedir = "./saved_models"
-    if not os.path.exists(savedir):
-        os.makedirs(savedir)
-        with open(f"{savedir}/.gitignore", "w") as file:
-            lines = [".gitignore\n", "*.pt\n"]
-            file.writelines(lines)
 
     torch.save(model, f"./saved_models/improved_net_e_{epochs}_{start_time}.pt")
 
