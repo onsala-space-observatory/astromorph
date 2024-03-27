@@ -1,5 +1,6 @@
 import argparse
 import datetime as dt
+import os
 import random
 from typing import Callable, Optional
 
@@ -13,6 +14,7 @@ from torchvision import transforms as T
 from tqdm import tqdm
 
 from datasets import MaskedDataset, FilelistDataset
+from models import NLayerResnet
 
 
 class RandomApply(nn.Module):
@@ -134,7 +136,7 @@ def train(
     device: str = "cpu",
     test_data: Optional[DataLoader] = None,
     timestamp: Optional[str] = None,
-    resnet: Optional[nn.Module] = None,
+    save_intermediates: bool = False,
 ):
     """Train a model
 
@@ -173,16 +175,16 @@ def train(
                 "Test loss", test_loss / len(test_data), epoch, new_style=True
             )
         # Save the network nested in the BYOL
-        if resnet is not None:
+        if save_intermediates is not None:
             torch.save(
-                resnet.state_dict(),
+                model,
                 f"./saved_models/improved_net_e_{epoch}_{epochs}_{timestamp}.pt",
             )
 
     return model
 
 
-def main(full_dataset: Dataset, epochs: int):
+def main(full_dataset: Dataset, epochs: int, last_layer: str = "layer4"):
     # Use a GPU if available
     # For now, we default to CPU learning, because the GPU memory overhead
     # makes GPU slower than CPU
@@ -194,7 +196,7 @@ def main(full_dataset: Dataset, epochs: int):
     device = "cpu"
 
     # Load neural network and augmentation function, and combine into BYOL
-    resnet = models.resnet18().to(device)
+    network = NLayerResnet(last_layer=last_layer).to(device)
 
     augmentation_function = torch.nn.Sequential(
         RandomApply(T.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.3),
@@ -208,7 +210,7 @@ def main(full_dataset: Dataset, epochs: int):
     )
 
     learner = BYOL(
-        resnet,
+        network,
         image_size=256,
         hidden_layer="avgpool",
         use_momentum=False,  # turn off momentum in the target encoder
@@ -231,6 +233,15 @@ def main(full_dataset: Dataset, epochs: int):
     # Timestamp to identify training runs
     start_time = dt.datetime.now().strftime("%Y%m%d_%H%M")
 
+    # If necessary, create the folder saved_models.
+    # Also, ensure it does not show up in git
+    savedir = "./saved_models"
+    if not os.path.exists(savedir):
+        os.makedirs(savedir)
+        with open(f"{savedir}/.gitignore", "w") as file:
+            lines = [".gitignore\n", "*.pt\n"]
+            file.writelines(lines)
+
     model = train(
         learner,
         train_data,
@@ -239,11 +250,10 @@ def main(full_dataset: Dataset, epochs: int):
         device=device,
         test_data=test_data,
         timestamp=start_time,
-        resnet=resnet,
+        save_intermediates=True,
     )
-    torch.save(
-        resnet.state_dict(), f"./saved_models/improved_net_e_{epochs}_{start_time}.pt"
-    )
+
+    torch.save(model, f"./saved_models/improved_net_e_{epochs}_{start_time}.pt")
 
 
 if __name__ == "__main__":
@@ -254,6 +264,13 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--datafile", help="Define a data file", required=True)
     parser.add_argument("-m", "--maskfile", help="Specify a mask file")
     parser.add_argument("-e", "--epochs", help="Number of epochs", default=10, type=int)
+    parser.add_argument(
+        "-l",
+        "--last-layer",
+        help="Last convolutional ResNet layer",
+        default="layer4",
+        type=str,
+    )
     args = parser.parse_args()
 
     if args.maskfile:
@@ -261,4 +278,4 @@ if __name__ == "__main__":
     else:
         dataset = FilelistDataset(args.datafile)
 
-    main(dataset, args.epochs)
+    main(dataset, args.epochs, args.last_layer)

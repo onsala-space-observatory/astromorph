@@ -1,4 +1,5 @@
 import argparse
+import os
 from typing import Union
 
 from datasets import MaskedDataset, FilelistDataset
@@ -10,6 +11,10 @@ from tqdm import tqdm
 import numpy as np
 from skimage.transform import resize
 from sklearn import cluster
+
+# Provide these to the namespace for the read models
+from basic_training import RandomApply, BYOL
+from models import NLayerResnet
 
 
 def pad_image_to_square(image):
@@ -62,21 +67,19 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
     images = dataset.get_all_items()
 
     # Loading model
-    model = models.resnet18()
     print(f"Loading pretrained model {model_name}...")
-    model.load_state_dict(torch.load(f"{model_name}"))
 
-    learner = BYOL(model, image_size=256, hidden_layer="avgpool")
+    learner = torch.load(model_name)
     learner.eval()
 
     print("Calculating embeddings...")
     # embeddings are of dimension 512
-    dim_embeddings = 512
+    dim_embeddings = 64
     embeddings = torch.empty((0, dim_embeddings))
     with torch.no_grad():
         for image in tqdm(images):
             proj, emb = learner(torch.from_numpy(image), return_embedding=True)
-            embeddings = torch.cat((embeddings, emb), 0)
+            embeddings = torch.cat((embeddings, emb), dim=0)
 
     print("Clustering embeddings...")
     clusterer = cluster.KMeans(n_clusters=10)
@@ -96,7 +99,9 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
     # Concatenate thumbnails into a single tensor for labelling the embeddings
     all_ims = torch.cat([torch.from_numpy(ri) for ri in resized])
 
-    writer = SummaryWriter(log_dir="runs/projection_alma_v1/")
+    # Remove directory names, and remove the extension as well
+    model_basename = os.path.basename(model_name).split(".")[0]
+    writer = SummaryWriter(log_dir=f"runs/{model_basename}/")
     writer.add_embedding(embeddings, label_img=all_ims, metadata=cluster_labels)
 
 

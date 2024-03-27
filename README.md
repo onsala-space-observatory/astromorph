@@ -76,6 +76,21 @@ Optionally, the number of training epochs can be specified with the `-e` flag, w
 python astromorph/src/basic_training.py -d <data-file> -m <mask-file> -e 5
 ```
 
+#### Reduced ResNet18 network
+
+It is possible to use only a few of the convolutional layers of the ResNet18 network.
+There are four convolutional layers in ResNet18, named `layer1`, `layer2`,
+`layer3`, and `layer4`.
+If we select `layer2` as the last convolutional layer, `layer3` and `layer4`
+will be removed from the network.
+
+This might be beneficial, as the earlier layers are usually more generic.
+To invoke this possibility, invoke the `-l` flag, which has a default value of `layer4`, i.e. use the full ResNet18 network.
+
+```bash
+python astromorph/src/inference.py -d filelist.txt -l layer2
+```
+
 ### Inference
 
 To run a trained network on some data, use the following command:
