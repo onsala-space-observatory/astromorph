@@ -1,4 +1,5 @@
 import argparse
+import os
 from typing import Union
 
 from datasets import MaskedDataset, FilelistDataset
@@ -98,7 +99,9 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
     # Concatenate thumbnails into a single tensor for labelling the embeddings
     all_ims = torch.cat([torch.from_numpy(ri) for ri in resized])
 
-    writer = SummaryWriter(log_dir=f"runs/{model_name}/")
+    # Remove directory names, and remove the extension as well
+    model_basename = os.path.basename(model_name).split(".")[0]
+    writer = SummaryWriter(log_dir=f"runs/{model_basename}/")
     writer.add_embedding(embeddings, label_img=all_ims, metadata=cluster_labels)
 
 
