@@ -5,6 +5,7 @@ from torchvision.models import resnet18
 
 class NLayerResnet(nn.Module):
     def __init__(self) -> None:
+        super().__init__()
         basemodel = resnet18()
         excluded_layers = ["layer2", "layer3", "layer4", "fc"]
 
