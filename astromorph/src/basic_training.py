@@ -183,7 +183,7 @@ def train(
     return model
 
 
-def main(full_dataset: Dataset, epochs: int):
+def main(full_dataset: Dataset, epochs: int, last_layer: str = "layer4"):
     # Use a GPU if available
     # For now, we default to CPU learning, because the GPU memory overhead
     # makes GPU slower than CPU
@@ -195,7 +195,7 @@ def main(full_dataset: Dataset, epochs: int):
     device = "cpu"
 
     # Load neural network and augmentation function, and combine into BYOL
-    network = NLayerResnet().to(device)
+    network = NLayerResnet(last_layer=last_layer).to(device)
 
     augmentation_function = torch.nn.Sequential(
         RandomApply(T.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.3),
@@ -254,6 +254,13 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--datafile", help="Define a data file", required=True)
     parser.add_argument("-m", "--maskfile", help="Specify a mask file")
     parser.add_argument("-e", "--epochs", help="Number of epochs", default=10, type=int)
+    parser.add_argument(
+        "-l",
+        "--last-layer",
+        help="Last convolutional ResNet layer",
+        default="layer4",
+        type=str,
+    )
     args = parser.parse_args()
 
     if args.maskfile:
@@ -261,4 +268,4 @@ if __name__ == "__main__":
     else:
         dataset = FilelistDataset(args.datafile)
 
-    main(dataset, args.epochs)
+    main(dataset, args.epochs, args.last_layer)
