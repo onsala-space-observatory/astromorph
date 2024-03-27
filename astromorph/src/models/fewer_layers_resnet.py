@@ -59,6 +59,7 @@ class NLayerResnet(nn.Module):
         self.add_module(
             "fc", nn.Linear(in_features=settings.embedding_dim, out_features=64)
         )
+        self.embedding_dim = settings.embedding_dim
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward a torch.Tensor through the network.
