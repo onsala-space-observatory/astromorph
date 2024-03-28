@@ -105,8 +105,31 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
         names = dataset.get_object_property("OBJECT")
         right_ascension = dataset.get_object_property("OBSRA")
         declination = dataset.get_object_property("OBSDEC")
-        labels = list(zip(cluster_labels, names, right_ascension, declination))
-        writer.add_embedding(embeddings, label_img=all_ims, metadata=labels, metadata_header=["cluster", "object", "right ascension", "declination"])
+        rest_freq = dataset.get_object_property("RESTFRQ")
+        filenames = dataset.filenames
+        labels = list(
+            zip(
+                cluster_labels,
+                names,
+                right_ascension,
+                declination,
+                rest_freq,
+                filenames,
+            )
+        )
+        writer.add_embedding(
+            embeddings,
+            label_img=all_ims,
+            metadata=labels,
+            metadata_header=[
+                "cluster",
+                "object",
+                "right ascension",
+                "declination",
+                "rest freq",
+                "filepath",
+            ],
+        )
     else:
         writer.add_embedding(embeddings, label_img=all_ims, metadata=cluster_labels)
 
