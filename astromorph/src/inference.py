@@ -101,7 +101,12 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
     # Remove directory names, and remove the extension as well
     model_basename = os.path.basename(model_name).split(".")[0]
     writer = SummaryWriter(log_dir=f"runs/{model_basename}/")
-    writer.add_embedding(embeddings, label_img=all_ims, metadata=cluster_labels)
+    if isinstance(dataset, FilelistDataset):
+        names = dataset.get_object_names()
+        labels = list(zip(cluster_labels, names))
+        writer.add_embedding(embeddings, label_img=all_ims, metadata=labels, metadata_header=["cluster", "object"])
+    else:
+        writer.add_embedding(embeddings, label_img=all_ims, metadata=cluster_labels)
 
 
 if __name__ == "__main__":

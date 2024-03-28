@@ -66,3 +66,14 @@ class FilelistDataset(Dataset):
             list of 4D torch Tensors that can be used for inference
         """
         return [make_4D(fits.open(filename).pop().data) for filename in self.filenames]
+
+    def get_object_names(self):
+        object_names = []
+        for filename in self.filenames:
+            header = fits.open(filename).pop().header
+            try:
+                object_name = header["OBJECT"]
+            except KeyError:
+                object_name = "N/A"
+            object_names.append(object_name)
+        return object_names
