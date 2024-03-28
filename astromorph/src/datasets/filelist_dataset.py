@@ -68,6 +68,14 @@ class FilelistDataset(Dataset):
         return [make_4D(fits.open(filename).pop().data) for filename in self.filenames]
 
     def get_object_property(self, keyword: str):
+        """Retrieve an object property from the FITS header
+
+        Args:
+            keyword: property keyword in the FITS file header
+
+        Returns:
+            a FITS header property
+        """
         object_properties = []
         for filename in self.filenames:
             header = fits.open(filename).pop().header
