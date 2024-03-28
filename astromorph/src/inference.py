@@ -102,9 +102,11 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
     model_basename = os.path.basename(model_name).split(".")[0]
     writer = SummaryWriter(log_dir=f"runs/{model_basename}/")
     if isinstance(dataset, FilelistDataset):
-        names = dataset.get_object_names()
-        labels = list(zip(cluster_labels, names))
-        writer.add_embedding(embeddings, label_img=all_ims, metadata=labels, metadata_header=["cluster", "object"])
+        names = dataset.get_object_property("OBJECT")
+        right_ascension = dataset.get_object_property("OBSRA")
+        declination = dataset.get_object_property("OBSDEC")
+        labels = list(zip(cluster_labels, names, right_ascension, declination))
+        writer.add_embedding(embeddings, label_img=all_ims, metadata=labels, metadata_header=["cluster", "object", "right ascension", "declination"])
     else:
         writer.add_embedding(embeddings, label_img=all_ims, metadata=cluster_labels)
 

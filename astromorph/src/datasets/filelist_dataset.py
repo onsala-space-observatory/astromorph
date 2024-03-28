@@ -67,13 +67,13 @@ class FilelistDataset(Dataset):
         """
         return [make_4D(fits.open(filename).pop().data) for filename in self.filenames]
 
-    def get_object_names(self):
-        object_names = []
+    def get_object_property(self, keyword: str):
+        object_properties = []
         for filename in self.filenames:
             header = fits.open(filename).pop().header
             try:
-                object_name = header["OBJECT"]
+                object_property = header[keyword]
             except KeyError:
-                object_name = "N/A"
-            object_names.append(object_name)
-        return object_names
+                object_property = "N/A"
+            object_properties.append(object_property)
+        return object_properties
