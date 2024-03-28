@@ -101,7 +101,10 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
     # Remove directory names, and remove the extension as well
     model_basename = os.path.basename(model_name).split(".")[0]
     writer = SummaryWriter(log_dir=f"runs/{model_basename}/")
+
+    # If the data is stored in FITS files, retrieve extra metadata
     if isinstance(dataset, FilelistDataset):
+        # Retrieve object name, RA, dec, rest frequency, and the filename
         names = dataset.get_object_property("OBJECT")
         right_ascension = dataset.get_object_property("OBSRA")
         declination = dataset.get_object_property("OBSDEC")
