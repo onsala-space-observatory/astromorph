@@ -66,3 +66,22 @@ class FilelistDataset(Dataset):
             list of 4D torch Tensors that can be used for inference
         """
         return [make_4D(fits.open(filename).pop().data) for filename in self.filenames]
+
+    def get_object_property(self, keyword: str):
+        """Retrieve an object property from the FITS header
+
+        Args:
+            keyword: property keyword in the FITS file header
+
+        Returns:
+            a FITS header property
+        """
+        object_properties = []
+        for filename in self.filenames:
+            header = fits.open(filename).pop().header
+            try:
+                object_property = header[keyword]
+            except KeyError:
+                object_property = "N/A"
+            object_properties.append(object_property)
+        return object_properties
