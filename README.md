@@ -34,7 +34,7 @@ The next step is to install the dependencies in the virtual environment
 # If you have deactivated your venv, make sure to activate it again
 $ source .venv/bin/activate
 # Install requirements using pip
-$ pip install -r requirements
+$ pip install -r requirements.txt
 ```
 
 ## Running
