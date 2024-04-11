@@ -9,12 +9,12 @@ from byol_pytorch import BYOL
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.tensorboard import SummaryWriter
-from torchvision import models
+from torchvision import models as tvmodels
 from torchvision import transforms as T
 from tqdm import tqdm
 
 from datasets import MaskedDataset, FilelistDataset
-from models import NLayerResnet
+from models import NLayerResnet, CloudScanner
 
 
 class RandomApply(nn.Module):
@@ -70,7 +70,7 @@ def train_epoch(
     # Set initial conditions
     total_loss = 0.0
     batch_loss = None  # batch_loss will be of type torch.nn.loss._Loss
-    batch_size = 32  # 64
+    batch_size = 16 # 64
 
     # Define constants
     epoch_length = len(data) // batch_size
@@ -197,6 +197,8 @@ def main(full_dataset: Dataset, epochs: int, last_layer: str = "layer4"):
 
     # Load neural network and augmentation function, and combine into BYOL
     network = NLayerResnet(last_layer=last_layer).to(device)
+    # network = tvmodels.regnet_y_800mf().to(device)
+    # network = CloudScanner().to(device)
 
     augmentation_function = torch.nn.Sequential(
         RandomApply(T.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.3),
@@ -213,7 +215,7 @@ def main(full_dataset: Dataset, epochs: int, last_layer: str = "layer4"):
         network,
         image_size=256,
         hidden_layer="avgpool",
-        use_momentum=False,  # turn off momentum in the target encoder
+        use_momentum=True, #False,  # turn off momentum in the target encoder
         augment_fn=augmentation_function,
     )
 
