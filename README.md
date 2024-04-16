@@ -4,6 +4,10 @@ The AstroMorph project is an ML project to automatically separate a collection o
 
 ## Installation
 
+This project has been developed for Python 3.12.
+Lower versions of Python might work, but there is no guarantee.
+Anything below Python 3.9 will definitely not work.
+
 The easiest way to set this project up is inside its own virtual environment.
 If you are not familiar with those, you can read up on them [here](https://docs.python.org/3/library/venv.html).
 In short, they are a very convenient way of separating projects with conflicting
