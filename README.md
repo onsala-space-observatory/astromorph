@@ -39,6 +39,17 @@ $ pip install -r requirements.txt
 
 ## Running
 
+### Basic configuration
+
+The settings of the training run are specified through a TOML file.
+An example of such a file can be found in `example_settings.toml`.
+This file can be passed to the script with the `-c` or `--config-file` flag.
+The script should be invoked from the main folder of the repository:
+
+```bash
+python astromorph/src/basic_training.py -c example_settings.toml
+```
+
 ### Training
 
 #### Filelist
@@ -52,28 +63,42 @@ We do this using the following commands:
 ```bash
 # Find the filenames and store them in data/inputfiles.txt
 $ find data -type f -size -10M -path "**.fits" > data/inputfiles.txt
-$ python astromorph/src/basic_training.py -d data/inputfiles.txt
+$ python astromorph/src/basic_training.py -c training_settings.toml
+```
+
+In this example, `training_settings.toml` would look similar to
+
+```toml
+# Configfile for using a filelist
+datafile = "data/inputfiles.txt"
+network_name = "n_layer_resnet"
 ```
 
 #### Masked data
 
 When extracting objects from a binary mask, the script expects the following input:
 
-- a single fits file containing all the data
-- a fits file of the same size with a binary mask, where all the object pixels are coded with a `1`
+- a single FITS file containing all the data
+- a FITS file of the same size with a binary mask, where all the object pixels are coded with a `1`
 
-To train the model, just run the following command from the main directory of the repo:
+Now the config file would have the added keyword `maskfile`:
 
-```bash
-python astromorph/src/basic_training.py -d <data-file> -m <mask-file>
+```toml
+# Configfile for using masked data in two FITS files
+datafile = "data/data_file.fits"
+maskfile = "data/masked_file.fits"
+network_name = "n_layer_resnet"
 ```
 
 #### Epochs
 
-Optionally, the number of training epochs can be specified with the `-e` flag, with a default of 10.
+Optionally, the number of training epochs can be specified with the `epochs` keyword, with a default of 10.
 
-```bash
-python astromorph/src/basic_training.py -d <data-file> -m <mask-file> -e 5
+```toml
+# Configfile for using a filelist
+datafile = "data/inputfiles.txt"
+epochs = 5
+network_name = "n_layer_resnet"
 ```
 
 #### Reduced ResNet18 network
@@ -85,10 +110,17 @@ If we select `layer2` as the last convolutional layer, `layer3` and `layer4`
 will be removed from the network.
 
 This might be beneficial, as the earlier layers are usually more generic.
-To invoke this possibility, invoke the `-l` flag, which has a default value of `layer4`, i.e. use the full ResNet18 network.
+To invoke this possibility, use the `last_layer` keyword inside the `network_settings` dictionary.
+By default, `n_layer_resnet` will use the full ResNet18 network.
 
-```bash
-python astromorph/src/inference.py -d filelist.txt -l layer2
+```toml
+# Configfile for using a filelist
+datafile = "data/inputfiles.txt"
+epochs = 5
+network_name = "n_layer_resnet"
+
+[network_settings]
+last_layer = "layer2"
 ```
 
 ### Inference
