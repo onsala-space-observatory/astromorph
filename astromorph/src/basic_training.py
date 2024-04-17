@@ -15,7 +15,7 @@ from torchvision import transforms as T
 from tqdm import tqdm
 
 from datasets import MaskedDataset, FilelistDataset
-from models import NLayerResnet, CloudScanner
+from models import NLayerResnet
 from settings import TrainingSettings
 
 
