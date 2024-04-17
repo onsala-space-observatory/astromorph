@@ -125,13 +125,38 @@ last_layer = "layer2"
 
 ### Inference
 
-To run a trained network on some data, use the following command:
+To run a trained network on some data, we will have to specify the location of the trained neural network.
+We do this with the `trained_network_name` keyword in the config file.
+
+```toml
+# Configfile for using a filelist
+datafile = "data/inputfiles.txt"
+epochs = 5
+network_name = "n_layer_resnet"
+trained_network_name = "saved_models/newly_trained_network.pt"
+
+[network_settings]
+last_layer = "layer2"
+```
+
+The non-relevant options (e.g. `epochs`) will be ignored, so you can reuse the config file from the training run.
+
+Alternatively, you can specify the relevant options using the command line, as shown here:
 
 ```bash
 python astromorph/src/inference.py -d <data-file> -m <mask-file> -n <trained-network-file>
 ```
 
-To then view a visualisation of the embeddings, use TensorBoard with:
+It is even possible to use a combination of config file and command line options.
+The options given in the command line will overrule the settings specified in the config file.
+
+```bash
+python astromorph/src/inference.py -c example_settings.toml -n saved_models/newly_trained_network.pt
+```
+
+### Visualisation
+
+To view a visualisation of the embeddings after inference, use TensorBoard with:
 
 ```bash
 tensorboard --logdir=./runs
