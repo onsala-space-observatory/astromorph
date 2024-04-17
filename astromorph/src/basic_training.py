@@ -4,6 +4,7 @@ import os
 import random
 from typing import Callable, Optional
 
+import tomllib
 import torch
 from byol_pytorch import BYOL
 from torch import nn
@@ -14,7 +15,8 @@ from torchvision import transforms as T
 from tqdm import tqdm
 
 from datasets import MaskedDataset, FilelistDataset
-from models import NLayerResnet
+from models import NLayerResnet, CloudScanner
+from settings import TrainingSettings
 
 
 class RandomApply(nn.Module):
@@ -261,21 +263,15 @@ if __name__ == "__main__":
         prog="Astromorph pipeline", description=None, epilog=None
     )
 
-    parser.add_argument("-d", "--datafile", help="Define a data file", required=True)
-    parser.add_argument("-m", "--maskfile", help="Specify a mask file")
-    parser.add_argument("-e", "--epochs", help="Number of epochs", default=10, type=int)
-    parser.add_argument(
-        "-l",
-        "--last-layer",
-        help="Last convolutional ResNet layer",
-        default="layer4",
-        type=str,
-    )
-    args = parser.parse_args()
+    parser.add_argument("-c", "--configfile", help="Specify a configfile", required=True)
 
-    if args.maskfile:
-        dataset = MaskedDataset(args.datafile, args.maskfile)
+    with open(parser.parse_args().configfile, "rb") as file:
+        config_dict = tomllib.load(file)
+    settings = TrainingSettings(**config_dict)
+
+    if settings.maskfile:
+        dataset = MaskedDataset(settings.datafile, settings.maskfile)
     else:
-        dataset = FilelistDataset(args.datafile)
+        dataset = FilelistDataset(settings.datafile)
 
-    main(dataset, args.epochs, args.last_layer)
+    main(dataset, settings.epochs, settings.last_layer)
