@@ -1,5 +1,6 @@
 import argparse
 import os
+import tomllib
 from typing import Union
 
 from datasets import MaskedDataset, FilelistDataset
@@ -15,6 +16,7 @@ from sklearn import cluster
 # Provide these to the namespace for the read models
 from basic_training import RandomApply, BYOL
 from models import NLayerResnet
+from settings import InferenceSettings
 
 
 def pad_image_to_square(image):
@@ -139,18 +141,38 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
 
 
 if __name__ == "__main__":
+    # Options can either be provided by command line arguments, or a config file
+    # Options from the command line will override those from the config file
     parser = argparse.ArgumentParser(
         prog="Astromorph pipeline", description=None, epilog=None
     )
-    parser.add_argument("-d", "--datafile", help="Define a data file", required=True)
+    parser.add_argument("-d", "--datafile", help="Define a data file")
     parser.add_argument("-m", "--maskfile", help="Specify a mask file")
-    parser.add_argument("-n", "--network", help="Saved network model", required=True)
+    parser.add_argument("-n", "--trained_network_name", help="Saved network model")
+    parser.add_argument("-c", "--configfile", help="Specify a config file")
     args = parser.parse_args()
+
+    # If there is a config file, load those settings first
+    # Otherwise, only use settings from the command line
+    if args.configfile:
+        overriding_settings = vars(args)
+        configfile = overriding_settings.pop("configfile")
+        with open(configfile, "rb") as file:
+            config_dict = tomllib.load(file)
+        # Overwrite the config file settings with command line settings
+        for key, value in overriding_settings.items():
+            if value is not None:
+                config_dict.update({key: value})
+    else:
+        config_dict = vars(args)
+
+    # Use InferenceSettings to validate settings
+    settings = InferenceSettings(**config_dict)
 
     print("Reading data")
     if args.maskfile:
-        dataset = MaskedDataset(args.datafile, args.maskfile)
+        dataset = MaskedDataset(settings.datafile, settings.maskfile)
     else:
-        dataset = FilelistDataset(args.datafile)
+        dataset = FilelistDataset(settings.datafile)
 
-    main(dataset, args.network)
+    main(dataset, settings.trained_network_name)
