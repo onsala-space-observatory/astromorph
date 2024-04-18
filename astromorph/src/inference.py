@@ -75,9 +75,10 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
     learner.eval()
 
     print("Calculating embeddings...")
-    # embeddings are of dimension 512
-    embeddings = torch.empty((0, learner.net.embedding_dim))
     with torch.no_grad():
+        _, dummy_embeddings = learner(torch.from_numpy(images[0]), return_embedding=True)
+        embeddings_dim = dummy_embeddings.shape[1]
+        embeddings = torch.empty((0, embeddings_dim))
         for image in tqdm(images):
             proj, emb = learner(torch.from_numpy(image), return_embedding=True)
             embeddings = torch.cat((embeddings, emb), dim=0)

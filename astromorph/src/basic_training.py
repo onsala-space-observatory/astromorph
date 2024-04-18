@@ -10,7 +10,7 @@ from byol_pytorch import BYOL
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.tensorboard import SummaryWriter
-from torchvision import models
+from torchvision import models as tvmodels
 from torchvision import transforms as T
 from tqdm import tqdm
 
@@ -72,7 +72,7 @@ def train_epoch(
     # Set initial conditions
     total_loss = 0.0
     batch_loss = None  # batch_loss will be of type torch.nn.loss._Loss
-    batch_size = 32  # 64
+    batch_size = 16 # 64
 
     # Define constants
     epoch_length = len(data) // batch_size
@@ -215,7 +215,7 @@ def main(full_dataset: Dataset, epochs: int, network_name: str, network_settings
         network,
         image_size=256,
         hidden_layer="avgpool",
-        use_momentum=False,  # turn off momentum in the target encoder
+        use_momentum=True, #False,  # turn off momentum in the target encoder
         augment_fn=augmentation_function,
     )
 
