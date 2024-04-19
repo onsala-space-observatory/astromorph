@@ -170,9 +170,9 @@ if __name__ == "__main__":
     settings = InferenceSettings(**config_dict)
 
     print("Reading data")
-    if args.maskfile:
-        dataset = MaskedDataset(settings.datafile, settings.maskfile)
+    if settings.maskfile:
+        dataset = MaskedDataset(settings.datafile, settings.maskfile, **(settings.data_settings))
     else:
-        dataset = FilelistDataset(settings.datafile)
+        dataset = FilelistDataset(settings.datafile, **(settings.data_settings))
 
     main(dataset, settings.trained_network_name)

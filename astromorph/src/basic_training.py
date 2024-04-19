@@ -270,8 +270,8 @@ if __name__ == "__main__":
     settings = TrainingSettings(**config_dict)
 
     if settings.maskfile:
-        dataset = MaskedDataset(settings.datafile, settings.maskfile)
+        dataset = MaskedDataset(settings.datafile, settings.maskfile, **(settings.data_settings))
     else:
-        dataset = FilelistDataset(settings.datafile)
+        dataset = FilelistDataset(settings.datafile, **(settings.data_settings))
 
     main(dataset, settings.epochs, settings.network_name, settings.network_settings)

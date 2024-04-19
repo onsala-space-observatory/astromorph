@@ -7,3 +7,7 @@ network_name = "n_layer_resnet"
 
 [network_settings]
 last_layer = "layer4"
+
+[data_settings]
+remove_unrelated_data = true
+
