@@ -22,9 +22,23 @@ def cloud_clipping(image: np.ndarray):
     return np.log10(np.clip(image, a_min=1, a_max=100))
 
 
+def make_masked_image(data: np.ndarray, mask: np.ndarray, label: int, median_fill: bool=True):
+    median = np.median(data)
+    std = data.std()
+
+    condition = mask==label
+    data *= condition
+    if median_fill:
+        noise = np.random.normal(loc=median, scale=std, size=data.shape)
+        data[~condition] = noise[~condition]
+
+    return data
+
+
+
 class MaskedDataset(Dataset):
     def __init__(
-        self, datafile: str, maskfile: str, remove_unrelated_data: bool = False
+        self, datafile: str, maskfile: str, remove_unrelated_data: bool = False, median_fill: bool = True
     ):
         """Retrieve a list of arrays containing image data, based on the raw data and a mask.
 
@@ -60,7 +74,7 @@ class MaskedDataset(Dataset):
             cloud_images = [
                 # Slice first, then filter by label.
                 # That is faster than searching the entire image for the label value
-                real_data[xy_slice] * (labels[xy_slice] == label)
+                make_masked_image(real_data[xy_slice], labels[xy_slice], label, median_fill)
                 for xy_slice, label in large_object_slices
             ]
         else:
