@@ -23,6 +23,18 @@ def cloud_clipping(image: np.ndarray):
 
 
 def make_masked_image(data: np.ndarray, mask: np.ndarray, label: int, median_fill: bool=True):
+    """Filter out the pixels in an image that are not part of the mask.
+
+    Args:
+        data: original data
+        mask: labeled image mask
+        label: which part of the mask to use
+        median_fill: whether to fill the excised area with gaussian noise,
+                     centered on the median
+
+    Returns:
+        a masked data array
+    """
     median = np.median(data)
     std = data.std()
 
