@@ -81,9 +81,7 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
 
     print("Calculating embeddings...")
     with torch.no_grad():
-        _, dummy_embeddings = learner(
-            images[0], return_embedding=True
-        )
+        _, dummy_embeddings = learner(images[0], return_embedding=True)
         embeddings_dim = dummy_embeddings.shape[1]
         embeddings = torch.empty((0, embeddings_dim))
         for image in tqdm(images):
@@ -194,7 +192,9 @@ if __name__ == "__main__":
 
     print("Reading data")
     if settings.maskfile:
-        dataset = MaskedDataset(settings.datafile, settings.maskfile, **(settings.data_settings))
+        dataset = MaskedDataset(
+            settings.datafile, settings.maskfile, **(settings.data_settings)
+        )
     else:
         dataset = FilelistDataset(settings.datafile, **(settings.data_settings))
 
