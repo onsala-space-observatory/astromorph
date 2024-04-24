@@ -54,10 +54,10 @@ class FilelistDataset(Dataset):
         Returns:
             a 4D torch tensor
         """
-        image = fits.open(name=self.filenames[index]).pop().data
+        image = torch.from_numpy(fits.open(name=self.filenames[index]).pop().data)
         images = augment_image(image)
 
-        return torch.from_numpy(images)
+        return images
 
     def get_all_items(self):
         """Produce all items as inferable images
@@ -65,7 +65,7 @@ class FilelistDataset(Dataset):
         Returns:
             list of 4D torch Tensors that can be used for inference
         """
-        return [make_4D(fits.open(filename).pop().data) for filename in self.filenames]
+        return [make_4D(torch.from_numpy(fits.open(filename).pop().data)) for filename in self.filenames]
 
     def get_object_property(self, keyword: str):
         """Retrieve an object property from the FITS header

@@ -100,7 +100,7 @@ class MaskedDataset(Dataset):
         else:
             cloud_images = [real_data[xy_slice] for xy_slice, _ in large_object_slices]
 
-        self.objects = [cloud_clipping(image) for image in cloud_images]
+        self.objects = [torch.from_numpy(cloud_clipping(image)) for image in cloud_images]
 
     def __len__(self):
         """Return the size of the dataset.
@@ -129,9 +129,8 @@ class MaskedDataset(Dataset):
         """
         image = self.objects[index]
 
-        images = augment_image(image)
+        return augment_image(image)
 
-        return torch.from_numpy(images)
 
     def get_all_items(self):
         """Produce all items as inferable images
