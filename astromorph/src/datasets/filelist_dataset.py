@@ -11,7 +11,7 @@ from .helpers import augment_image, make_4D
 class FilelistDataset(Dataset):
     """A class to gather multiple FITS images in a Dataset."""
 
-    def __init__(self, filelist: Union[str, list]):
+    def __init__(self, filelist: Union[str, list], *args, **kwargs):
         """Create a FilelistDataset.
 
         This will only store the filenames in memory.

@@ -56,6 +56,7 @@ class MaskedDataset(Dataset):
         maskfile: str,
         remove_unrelated_data: bool = False,
         median_fill: bool = True,
+        *args, **kwargs
     ):
         """Retrieve a list of arrays containing image data, based on the raw data and a mask.
 
