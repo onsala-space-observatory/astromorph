@@ -100,6 +100,8 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
     # If thumbnails are too large, TensorBoard runs out of memory
     thumbnail_size = 144
     resized = [
+        # flip image to put origin in same location as in CASA
+        torch.flip(
             # resize outputs a numpy array, convert back to tensor
             torch.from_numpy(
                 resize(
@@ -111,7 +113,11 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
                     ),
                     (3, thumbnail_size, thumbnail_size),
                 )
-            )[None] # add extra dimension for concatenation
+            )[  # add extra dimension for concatenation
+                None
+            ],
+            [1, 2],
+        )
         for im in plot_images
     ]
 
