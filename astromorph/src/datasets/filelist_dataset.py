@@ -60,7 +60,19 @@ class FilelistDataset(Dataset):
 
         return images
 
-    def read_fits_data(self, filename: str):
+    def read_fits_data(self, filename: str) -> torch.Tensor:
+        """Read FITS file data into a pytorch Tensor.
+
+        Data straight out of a FITS file cannot be read into a pytorch tensor.
+        This function will do some datatype manipulation to produce a tensor 
+        that can go straight into a neural network.
+
+        Args:
+            filename: location of the FITS file
+
+        Returns:
+            the FITS data in a torch.Tensor
+        """
         # FITS data is standard in dtype '>f4', convert to float before converting to tensor
         data = fits.getdata(filename).astype(float)
         return torch.from_numpy(data).float()
