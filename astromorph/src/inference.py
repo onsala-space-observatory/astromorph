@@ -61,6 +61,16 @@ def normalize_image(image: torch.Tensor):
     return image
 
 
+def create_thumbnail(image: torch.Tensor, thumbnail_size: int):
+    # make sure the image is square
+    # only use the unaugmented image
+    image = pad_image_to_square(image[0])
+    image = resize(np.array(image), (3, thumbnail_size, thumbnail_size))
+    image = torch.from_numpy(image)[None]
+    image = torch.flip(image, [1,2])
+    return image
+
+
 def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
     """Run the inference.
 
@@ -97,27 +107,29 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
 
     # If thumbnails are too large, TensorBoard runs out of memory
     thumbnail_size = 144
-    resized = [
-        # flip image to put origin in same location as in CASA
-        torch.flip(
-            # resize outputs a numpy array, convert back to tensor
-            torch.from_numpy(
-                resize(
-                    # resize function does not accept torch Tensors
-                    np.array(
-                        # make sure the image is square
-                        # only use the unaugmented image
-                        pad_image_to_square(im[0])
-                    ),
-                    (3, thumbnail_size, thumbnail_size),
-                )
-            )[  # add extra dimension for concatenation
-                None
-            ],
-            [1, 2],
-        )
-        for im in plot_images
-    ]
+    # resized = [
+    #     # flip image to put origin in same location as in CASA
+    #     torch.flip(
+    #         # resize outputs a numpy array, convert back to tensor
+    #         torch.from_numpy(
+    #             resize(
+    #                 # resize function does not accept torch Tensors
+    #                 np.array(
+    #                     # make sure the image is square
+    #                     # only use the unaugmented image
+    #                     pad_image_to_square(im[0])
+    #                 ),
+    #                 (3, thumbnail_size, thumbnail_size),
+    #             )
+    #         )[  # add extra dimension for concatenation
+    #             None
+    #         ],
+    #         [1, 2],
+    #     )
+    #     for im in plot_images
+    # ]
+
+    resized = [create_thumbnail(image, thumbnail_size) for image in plot_images]
 
     # Concatenate thumbnails into a single tensor for labelling the embeddings
     all_ims = torch.cat(resized)
