@@ -1,5 +1,6 @@
 from typing import Union
 
+import numpy as np
 import torch
 
 from astropy.io import fits
@@ -54,10 +55,27 @@ class FilelistDataset(Dataset):
         Returns:
             a 4D torch tensor
         """
-        image = fits.open(name=self.filenames[index]).pop().data
+        image = self.read_fits_data(self.filenames[index])
         images = augment_image(image)
 
-        return torch.from_numpy(images)
+        return images
+
+    def read_fits_data(self, filename: str) -> torch.Tensor:
+        """Read FITS file data into a pytorch Tensor.
+
+        Data straight out of a FITS file cannot be read into a pytorch tensor.
+        This function will do some datatype manipulation to produce a tensor 
+        that can go straight into a neural network.
+
+        Args:
+            filename: location of the FITS file
+
+        Returns:
+            the FITS data in a torch.Tensor
+        """
+        # FITS data is standard in dtype '>f4', convert to float before converting to tensor
+        data = fits.getdata(filename).astype(float)
+        return torch.from_numpy(data).float()
 
     def get_all_items(self):
         """Produce all items as inferable images
@@ -65,7 +83,7 @@ class FilelistDataset(Dataset):
         Returns:
             list of 4D torch Tensors that can be used for inference
         """
-        return [make_4D(fits.open(filename).pop().data) for filename in self.filenames]
+        return [make_4D(self.read_fits_data(filename)) for filename in self.filenames]
 
     def get_object_property(self, keyword: str):
         """Retrieve an object property from the FITS header

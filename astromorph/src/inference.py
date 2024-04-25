@@ -6,6 +6,7 @@ from typing import Union
 from datasets import MaskedDataset, FilelistDataset
 from torchvision import models
 import torch
+from torch.nn.functional import pad
 from torch.utils.tensorboard import SummaryWriter
 from byol_pytorch import BYOL
 from tqdm import tqdm
@@ -19,40 +20,54 @@ from models import NLayerResnet
 from settings import InferenceSettings
 
 
-def pad_image_to_square(image):
+def pad_image_to_square(image: torch.Tensor):
     """Convert image to a square image.
 
     The image is padded with zeros where necessary
 
     Args:
-        image (np.ndarray): an image of shape (channels, width, height)
+        image: an image of shape (channels, width, height)
 
     Returns: a square image of shape (channels, new_size, new_size)
 
     """
     delta = abs(image.shape[1] - image.shape[2])
-    fixed_axis = np.argmax(image.shape)
+    fixed_axis = torch.argmax(torch.tensor(image.shape))
     expand_axis = 1 + (1 - (fixed_axis - 1))
     d1 = delta // 2
     d2 = delta - d1
 
     pad_widths = [
-        (0, 0),
-        (d1, d2) if expand_axis == 1 else (0, 0),
         (d1, d2) if expand_axis == 2 else (0, 0),
+        (d1, d2) if expand_axis == 1 else (0, 0),
+        (0, 0),
     ]
 
-    return np.pad(image, pad_width=pad_widths)
+    pad_tuple = ()
+    for padding in pad_widths:
+        pad_tuple += padding
+
+    return pad(image, pad_tuple, value=0)
 
 
-def normalize_image(image):
+def normalize_image(image: torch.Tensor):
     """Ensure that an image has pixel values between 0 and 1
 
     Args:
-        image (np.ndarray): an image to be normalized
+        image: an image to be normalized
     """
     image -= image.min()
     image /= image.max()
+    return image
+
+
+def create_thumbnail(image: torch.Tensor, thumbnail_size: int):
+    # make sure the image is square
+    # only use the unaugmented image
+    image = pad_image_to_square(image[0])
+    image = resize(np.array(image), (3, thumbnail_size, thumbnail_size))
+    image = torch.from_numpy(image)[None]
+    image = torch.flip(image, [1,2])
     return image
 
 
@@ -76,11 +91,11 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
 
     print("Calculating embeddings...")
     with torch.no_grad():
-        _, dummy_embeddings = learner(torch.from_numpy(images[0]), return_embedding=True)
+        _, dummy_embeddings = learner(images[0], return_embedding=True)
         embeddings_dim = dummy_embeddings.shape[1]
         embeddings = torch.empty((0, embeddings_dim))
         for image in tqdm(images):
-            proj, emb = learner(torch.from_numpy(image), return_embedding=True)
+            proj, emb = learner(image, return_embedding=True)
             embeddings = torch.cat((embeddings, emb), dim=0)
 
     print("Clustering embeddings...")
@@ -92,14 +107,32 @@ def main(dataset: Union[MaskedDataset, FilelistDataset], model_name: str):
 
     # If thumbnails are too large, TensorBoard runs out of memory
     thumbnail_size = 144
-    resized = [
-        # Use the [None] to remove the first extraneouos dimension
-        resize(pad_image_to_square(im[0]), (3, thumbnail_size, thumbnail_size))[None]
-        for im in plot_images
-    ]
+    # resized = [
+    #     # flip image to put origin in same location as in CASA
+    #     torch.flip(
+    #         # resize outputs a numpy array, convert back to tensor
+    #         torch.from_numpy(
+    #             resize(
+    #                 # resize function does not accept torch Tensors
+    #                 np.array(
+    #                     # make sure the image is square
+    #                     # only use the unaugmented image
+    #                     pad_image_to_square(im[0])
+    #                 ),
+    #                 (3, thumbnail_size, thumbnail_size),
+    #             )
+    #         )[  # add extra dimension for concatenation
+    #             None
+    #         ],
+    #         [1, 2],
+    #     )
+    #     for im in plot_images
+    # ]
+
+    resized = [create_thumbnail(image, thumbnail_size) for image in plot_images]
 
     # Concatenate thumbnails into a single tensor for labelling the embeddings
-    all_ims = torch.cat([torch.from_numpy(ri) for ri in resized])
+    all_ims = torch.cat(resized)
 
     # Remove directory names, and remove the extension as well
     model_basename = os.path.basename(model_name).split(".")[0]
@@ -171,7 +204,9 @@ if __name__ == "__main__":
 
     print("Reading data")
     if settings.maskfile:
-        dataset = MaskedDataset(settings.datafile, settings.maskfile, **(settings.data_settings))
+        dataset = MaskedDataset(
+            settings.datafile, settings.maskfile, **(settings.data_settings)
+        )
     else:
         dataset = FilelistDataset(settings.datafile, **(settings.data_settings))
 
