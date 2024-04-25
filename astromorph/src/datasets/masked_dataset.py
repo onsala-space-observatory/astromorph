@@ -66,10 +66,8 @@ class MaskedDataset(Dataset):
             remove_unrelated_data: if True, set all pixels outside a mask to 0
         """
         # Read maskdata and real data into numpy array
-        real_data = fits.open(datafile).pop().data
-        mask_data = fits.open(maskfile).pop().data
-        # Reverse byteorder, because otherwise the scipy.ndimage.label cannot deal with it
-        mask_data = mask_data.newbyteorder()
+        real_data = fits.getdata(datafile).astype(float)
+        mask_data = fits.getdata(maskfile).astype(int)
 
         labels, n_features = label(mask_data)
 
@@ -100,7 +98,7 @@ class MaskedDataset(Dataset):
         else:
             cloud_images = [real_data[xy_slice] for xy_slice, _ in large_object_slices]
 
-        self.objects = [torch.from_numpy(cloud_clipping(image)) for image in cloud_images]
+        self.objects = [torch.from_numpy(cloud_clipping(image)).float() for image in cloud_images]
 
     def __len__(self):
         """Return the size of the dataset.
