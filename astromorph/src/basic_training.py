@@ -204,6 +204,7 @@ def main(full_dataset: Dataset, epochs: int, network_name: str, network_settings
         RandomApply(T.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.3),
         T.RandomGrayscale(p=0.2),
         T.RandomHorizontalFlip(),
+        T.RandomRotation(degrees=(0,360)),
         RandomApply(T.GaussianBlur((3, 3), (1.0, 2.0)), p=0.2),
         T.Normalize(
             mean=torch.tensor([0.485, 0.456, 0.406]),
