@@ -28,6 +28,7 @@ class TrainingSettings(FileSettings):
     epochs: int = Field(default=10, gt=0)
     network_name: str
     network_settings: dict
+    byol_settings: dict
 
 
 class InferenceSettings(FileSettings):

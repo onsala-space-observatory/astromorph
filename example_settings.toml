@@ -10,4 +10,11 @@ last_layer = "layer4"
 
 [data_settings]
 remove_unrelated_data = true
+median_fill = false
+stacksize = 3
 
+[byol_settings]
+representation_size = 128
+projection_size = 64
+projection_hidden_size = 256
+use_momentum = true

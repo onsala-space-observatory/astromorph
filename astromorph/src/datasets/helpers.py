@@ -1,10 +1,12 @@
 import torch
 
-def make_4D(image: torch.Tensor):
+
+def make_4D(image: torch.Tensor, stacksize: int = 1):
     """Produce a version of the image that can be run on the inference network
 
     Args:
         image: 2D numpy array
+        stacksize: number of copies to stack on top of eachother
 
     Returns:
         4D numpy array that can be used for inference
@@ -12,11 +14,11 @@ def make_4D(image: torch.Tensor):
     # Create two extra dimensions
     image = image[None, None, :, :]
     # Create three channels per image (for RGB values)
-    # Final shape is (1, 3, x, y)
-    return torch.concatenate((image, image, image), 1)
+    # Final shape is (1, stacksize, x, y)
+    return torch.concatenate((image,) * stacksize, 1)
 
 
-def augment_image(image: torch.Tensor):
+def augment_image(image: torch.Tensor, stacksize: int = 1):
     """Create a 4D stack for image training.
 
     Training the model requires multiple images in a single go, because
@@ -31,7 +33,7 @@ def augment_image(image: torch.Tensor):
     Returns:
         4D numpy array containing augmented copies of the original image
     """
-    im_e = make_4D(image)
+    im_e = make_4D(image, stacksize=stacksize)
     im_c = torch.rot90(im_e, k=2, dims=(2, 3))
     im_b = torch.flip(im_e, dims=(2, 3))
     im_bc = torch.rot90(im_b, k=2, dims=(2, 3))
