@@ -4,6 +4,7 @@ datafile = "data/example_file.txt"
 # maskfile = "data/example_mask.fits"
 epochs = 5
 network_name = "n_layer_resnet"
+export_to_csv = true
 
 [network_settings]
 last_layer = "layer4"

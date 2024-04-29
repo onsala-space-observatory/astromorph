@@ -33,3 +33,4 @@ class TrainingSettings(FileSettings):
 
 class InferenceSettings(FileSettings):
     trained_network_name: FileName
+    export_to_csv: bool = Field(default=False)
