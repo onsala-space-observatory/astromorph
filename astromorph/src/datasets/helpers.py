@@ -6,6 +6,7 @@ def make_4D(image: torch.Tensor, stacksize: int = 1):
 
     Args:
         image: 2D numpy array
+        stacksize: number of copies to stack on top of eachother
 
     Returns:
         4D numpy array that can be used for inference
