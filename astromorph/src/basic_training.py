@@ -236,9 +236,6 @@ def main(
         ),
     )
 
-    representation_size = 128
-    logger.info("Using embedding dimensionality {}", representation_size)
-
     learner = BYOL(
         network,
         hidden_layer="avgpool",
