@@ -163,6 +163,7 @@ def train(
         else SummaryWriter(log_dir=f"runs/")
     )
 
+    learning_scheduler = ExponentialLR(optimizer, gamma=0.9)
     for epoch in range(epochs):
         # Ensure the model is set to training mode for gradient tracking
         model.train()
