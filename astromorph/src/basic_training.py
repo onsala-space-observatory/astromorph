@@ -6,7 +6,7 @@ from typing import Callable, Optional
 
 import tomllib
 import torch
-from byol_pytorch import BYOL
+from byol import BYOL
 from torch import nn
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader, Dataset
@@ -165,6 +165,7 @@ def train(
     )
 
     learning_scheduler = ExponentialLR(optimizer, gamma=0.9)
+
     for epoch in range(epochs):
         # Ensure the model is set to training mode for gradient tracking
         model.train()
@@ -218,6 +219,7 @@ def main(full_dataset: Dataset, epochs: int, network_name: str, network_settings
 
     learner = BYOL(
         network,
+        representation_size=128,
         image_size=256,
         hidden_layer="avgpool",
         use_momentum=True, #False,  # turn off momentum in the target encoder
