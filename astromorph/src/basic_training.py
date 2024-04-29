@@ -8,6 +8,7 @@ import tomllib
 import torch
 from byol_pytorch import BYOL
 from torch import nn
+from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import models as tvmodels
