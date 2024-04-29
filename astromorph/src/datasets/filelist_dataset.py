@@ -7,9 +7,10 @@ from astropy.io import fits
 from torch.utils.data import Dataset
 
 from .helpers import augment_image, make_4D
+from .base_dataset import BaseDataset
 
 
-class FilelistDataset(Dataset):
+class FilelistDataset(BaseDataset):
     """A class to gather multiple FITS images in a Dataset."""
 
     def __init__(self, filelist: Union[str, list], *args, **kwargs):
@@ -22,6 +23,7 @@ class FilelistDataset(Dataset):
             filelist: filename of the file containing all FITS filenames,
                       or a list of these filenames
         """
+        super().__init__(*args, **kwargs)
         if isinstance(filelist, list):
             self.filenames = filelist
         else:
@@ -56,7 +58,7 @@ class FilelistDataset(Dataset):
             a 4D torch tensor
         """
         image = self.read_fits_data(self.filenames[index])
-        images = augment_image(image)
+        images = augment_image(image, stacksize=self.stacksize)
 
         return images
 
@@ -83,7 +85,7 @@ class FilelistDataset(Dataset):
         Returns:
             list of 4D torch Tensors that can be used for inference
         """
-        return [make_4D(self.read_fits_data(filename)) for filename in self.filenames]
+        return [make_4D(self.read_fits_data(filename), stacksize=self.stacksize) for filename in self.filenames]
 
     def get_object_property(self, keyword: str):
         """Retrieve an object property from the FITS header

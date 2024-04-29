@@ -5,6 +5,7 @@ from astropy.io import fits
 from scipy.ndimage import find_objects, label
 from torch.utils.data import Dataset
 
+from .base_dataset import BaseDataset
 from .helpers import augment_image, make_4D
 
 
@@ -49,7 +50,7 @@ def make_masked_image(
     return data
 
 
-class MaskedDataset(Dataset):
+class MaskedDataset(BaseDataset):
     def __init__(
         self,
         datafile: str,
@@ -65,6 +66,7 @@ class MaskedDataset(Dataset):
             maskfile: filename for the mask data
             remove_unrelated_data: if True, set all pixels outside a mask to 0
         """
+        super().__init__(*args, **kwargs)
         # Read maskdata and real data into numpy array
         real_data = fits.getdata(datafile).astype(float)
         mask_data = fits.getdata(maskfile).astype(int)
@@ -127,7 +129,7 @@ class MaskedDataset(Dataset):
         """
         image = self.objects[index]
 
-        return augment_image(image)
+        return augment_image(image, stacksize=self.stacksize)
 
 
     def get_all_items(self):
@@ -136,4 +138,4 @@ class MaskedDataset(Dataset):
         Returns:
             list of 4D torch Tensors that can be used for inference
         """
-        return [make_4D(image) for image in self.objects]
+        return [make_4D(image, stacksize=self.stacksize) for image in self.objects]
