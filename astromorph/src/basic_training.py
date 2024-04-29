@@ -1,6 +1,7 @@
 import argparse
 import datetime as dt
 import os
+import pprint
 import random
 from typing import Callable, Optional
 
@@ -170,16 +171,14 @@ def train(
     logger.debug("Using 1-based counting for epoch numbering")
     for epoch in range(1, epochs + 1):
         # Ensure the model is set to training mode for gradient tracking
+        logger.info(f"[Epoch {epoch}] Learning rate: {learning_scheduler.get_lr()[0]:.3e}")
         model.train()
         model, loss = train_epoch(
             model, train_data, optimizer, device, writer=writer, epoch=epoch
         )
         writer.add_scalar("Train loss", loss / len(train_data), epoch, new_style=True)
-        logger.info(f"Training loss in epoch {epoch}: {loss / len(train_data)}")
+        logger.info(f"[Epoch {epoch}] Training loss: {loss / len(train_data):.3e}")
         learning_scheduler.step()
-        logger.info(
-            f"Learning rate set from {learning_scheduler.get_last_lr()[0]:.3e} to {learning_scheduler.get_lr()[0]:.3e}"
-        )
 
         # Out of sample testing
         if test_data:
@@ -187,13 +186,13 @@ def train(
             writer.add_scalar(
                 "Test loss", test_loss / len(test_data), epoch, new_style=True
             )
-            logger.info(f"Test loss in epoch {epoch}: {test_loss / len(test_data)}")
+            logger.info(f"[Epoch {epoch}] Test OOS loss: {test_loss / len(test_data):.3e}")
 
         # Save the network nested in the BYOL
         if save_intermediates is not None:
             save_file = f"./saved_models/improved_net_e_{epoch}_{epochs}_{timestamp}.pt"
             torch.save(model, save_file)
-            logger.info("Partially trained model saved to {}", save_file)
+            logger.info(f"[Epoch {epoch}] Checkpoint saved to {save_file}")
 
     return model
 
@@ -209,7 +208,7 @@ def main(
     start_time = dt.datetime.now().strftime("%Y%m%d_%H%M")
     logger.add(f"logs/{start_time}.log")
     if settings:
-        logger.info("Starting training run with settings {}", settings.model_dump())
+        logger.info("Starting training run with settings:\n{}", pprint.pformat(settings.model_dump()))
 
     # Use a GPU if available
     # For now, we default to CPU learning, because the GPU memory overhead
