@@ -12,6 +12,15 @@ from .netwrapper import NetWrapper
 
 
 def cosine_loss(x: torch.Tensor, y: torch.Tensor):
+    """Cosine loss function.
+
+    Args:
+        x: predicted tensor
+        y: target tensor
+
+    Returns:
+
+    """
     x = normalize(x, dim=-1, p=2)
     y = normalize(y, dim=-1, p=2)
 
@@ -19,6 +28,19 @@ def cosine_loss(x: torch.Tensor, y: torch.Tensor):
 
 
 class BYOL(nn.Module):
+    """Bootstrap Your Own Latent estimator.
+
+    Attributes:
+        augment_function: augmentation function to create different images
+        hidden_layer: which layer of the base neural network to intercept
+        online_encoder: encoder for later inference
+        online_predictor: MLP to convert a projection into prediction
+        target_encoder: encoder to compare, usually EWMA of online encoder
+        use_momentum: whether target_encode gets EMA updates from online encoder
+        loss_fn: loss function
+        moving_average_decay: decay parameter for target encoder
+    """
+
     def __init__(
         self,
         network: nn.Module,
@@ -30,7 +52,8 @@ class BYOL(nn.Module):
         projection_hidden_size: int = 1024,
         loss_fn: Callable = cosine_loss,
         moving_average_decay: float = 0.99,
-        *args, **kwargs
+        *args,
+        **kwargs
     ) -> None:
         super().__init__()
 
@@ -97,12 +120,22 @@ class BYOL(nn.Module):
         return loss.mean()
 
     def update_ma_single_param(self, old_value, new_value):
+        """Get value for a moving average, based on previous and new value.
+
+        Args:
+            old_value: previous EMA value
+            new_value: new actual value
+
+        Returns:
+            Updated EMA value
+        """
         return (
             self.moving_average_decay * old_value
             + (1 - self.moving_average_decay) * new_value
         )
 
     def update_moving_average(self):
+        """Update target encoder with moving average of all parameters."""
         if not self.use_momentum:
             logger.warning("Not updating moving average, use_momentum set to False!")
             return None
