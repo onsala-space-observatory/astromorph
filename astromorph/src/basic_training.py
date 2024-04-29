@@ -171,6 +171,7 @@ def train(
             model, train_data, optimizer, device, writer=writer, epoch=epoch + 1
         )
         writer.add_scalar("Train loss", loss / len(train_data), epoch, new_style=True)
+        learning_scheduler.step()
 
         # Out of sample testing
         if test_data:
