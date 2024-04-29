@@ -241,10 +241,9 @@ def main(
 
     learner = BYOL(
         network,
-        representation_size=representation_size,
         hidden_layer="avgpool",
-        use_momentum=True,  # False,  # turn off momentum in the target encoder
         augment_fn=augmentation_function,
+        **(settings.byol_settings)
     )
 
     # Create optimizer with the BYOL parameters
