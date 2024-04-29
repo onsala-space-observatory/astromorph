@@ -95,6 +95,7 @@ def train_epoch(
             batch_loss.backward()
             optimizer.step()
             optimizer.zero_grad()
+            learner.update_moving_average()
             if writer:
                 writer.add_scalar(
                     "Batch loss",
