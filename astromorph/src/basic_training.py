@@ -4,9 +4,9 @@ import os
 import random
 from typing import Callable, Optional
 
+from loguru import logger
 import tomllib
 import torch
-from byol import BYOL
 from torch import nn
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader, Dataset
@@ -15,6 +15,7 @@ from torchvision import models as tvmodels
 from torchvision import transforms as T
 from tqdm import tqdm
 
+from byol import BYOL
 from datasets import MaskedDataset, FilelistDataset
 from models import DEFAULT_MODELS
 from settings import TrainingSettings
@@ -73,7 +74,7 @@ def train_epoch(
     # Set initial conditions
     total_loss = 0.0
     batch_loss = None  # batch_loss will be of type torch.nn.loss._Loss
-    batch_size = 16 # 64
+    batch_size = 16  # 64
 
     # Define constants
     epoch_length = len(data) // batch_size
@@ -164,16 +165,21 @@ def train(
         else SummaryWriter(log_dir=f"runs/")
     )
 
-    learning_scheduler = ExponentialLR(optimizer, gamma=0.9)
+    learning_scheduler = ExponentialLR(optimizer, gamma=0.95)
 
-    for epoch in range(epochs):
+    logger.debug("Using 1-based counting for epoch numbering")
+    for epoch in range(1, epochs + 1):
         # Ensure the model is set to training mode for gradient tracking
         model.train()
         model, loss = train_epoch(
-            model, train_data, optimizer, device, writer=writer, epoch=epoch + 1
+            model, train_data, optimizer, device, writer=writer, epoch=epoch
         )
         writer.add_scalar("Train loss", loss / len(train_data), epoch, new_style=True)
+        logger.info(f"Training loss in epoch {epoch}: {loss / len(train_data)}")
         learning_scheduler.step()
+        logger.info(
+            f"Learning rate set from {learning_scheduler.get_last_lr()[0]:.3e} to {learning_scheduler.get_lr()[0]:.3e}"
+        )
 
         # Out of sample testing
         if test_data:
@@ -181,17 +187,30 @@ def train(
             writer.add_scalar(
                 "Test loss", test_loss / len(test_data), epoch, new_style=True
             )
+            logger.info(f"Test loss in epoch {epoch}: {test_loss / len(test_data)}")
+
         # Save the network nested in the BYOL
         if save_intermediates is not None:
-            torch.save(
-                model,
-                f"./saved_models/improved_net_e_{epoch}_{epochs}_{timestamp}.pt",
-            )
+            save_file = f"./saved_models/improved_net_e_{epoch}_{epochs}_{timestamp}.pt"
+            torch.save(model, save_file)
+            logger.info("Partially trained model saved to {}", save_file)
 
     return model
 
 
-def main(full_dataset: Dataset, epochs: int, network_name: str, network_settings: dict):
+def main(
+    full_dataset: Dataset,
+    epochs: int,
+    network_name: str,
+    network_settings: dict,
+    settings: Optional[TrainingSettings] = None,
+):
+    # Timestamp to identify training runs
+    start_time = dt.datetime.now().strftime("%Y%m%d_%H%M")
+    logger.add(f"logs/{start_time}.log")
+    if settings:
+        logger.info("Starting training run with settings {}", settings.model_dump())
+
     # Use a GPU if available
     # For now, we default to CPU learning, because the GPU memory overhead
     # makes GPU slower than CPU
@@ -201,6 +220,7 @@ def main(full_dataset: Dataset, epochs: int, network_name: str, network_settings
         else "mps" if torch.backends.mps.is_available() else "cpu"
     )
     device = "cpu"
+    logger.debug("Using device {}", device)
 
     # Load neural network and augmentation function, and combine into BYOL
     network = DEFAULT_MODELS[network_name](**network_settings).to(device)
@@ -209,7 +229,7 @@ def main(full_dataset: Dataset, epochs: int, network_name: str, network_settings
         RandomApply(T.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.3),
         T.RandomGrayscale(p=0.2),
         T.RandomHorizontalFlip(),
-        T.RandomRotation(degrees=(0,360)),
+        T.RandomRotation(degrees=(0, 360)),
         RandomApply(T.GaussianBlur((3, 3), (1.0, 2.0)), p=0.2),
         T.Normalize(
             mean=torch.tensor([0.485, 0.456, 0.406]),
@@ -217,12 +237,14 @@ def main(full_dataset: Dataset, epochs: int, network_name: str, network_settings
         ),
     )
 
+    representation_size = 128
+    logger.info("Using embedding dimensionality {}", representation_size)
+
     learner = BYOL(
         network,
-        representation_size=128,
-        image_size=256,
+        representation_size=representation_size,
         hidden_layer="avgpool",
-        use_momentum=True, #False,  # turn off momentum in the target encoder
+        use_momentum=True,  # False,  # turn off momentum in the target encoder
         augment_fn=augmentation_function,
     )
 
@@ -238,9 +260,6 @@ def main(full_dataset: Dataset, epochs: int, network_name: str, network_settings
     # DataLoaders have batch_size=1, because images have different sizes
     train_data = DataLoader(train_dataset, batch_size=1, shuffle=True)
     test_data = DataLoader(test_dataset, batch_size=1, shuffle=True)
-
-    # Timestamp to identify training runs
-    start_time = dt.datetime.now().strftime("%Y%m%d_%H%M")
 
     # If necessary, create the folder saved_models.
     # Also, ensure it does not show up in git
@@ -262,7 +281,9 @@ def main(full_dataset: Dataset, epochs: int, network_name: str, network_settings
         save_intermediates=True,
     )
 
-    torch.save(model, f"./saved_models/improved_net_e_{epochs}_{start_time}.pt")
+    model_file_name = f"./saved_models/improved_net_e_{epochs}_{start_time}.pt"
+    torch.save(model, model_file_name)
+    logger.info("Model saved to {}", model_file_name)
 
 
 if __name__ == "__main__":
@@ -270,15 +291,25 @@ if __name__ == "__main__":
         prog="Astromorph pipeline", description=None, epilog=None
     )
 
-    parser.add_argument("-c", "--configfile", help="Specify a configfile", required=True)
+    parser.add_argument(
+        "-c", "--configfile", help="Specify a configfile", required=True
+    )
 
     with open(parser.parse_args().configfile, "rb") as file:
         config_dict = tomllib.load(file)
     settings = TrainingSettings(**config_dict)
 
     if settings.maskfile:
-        dataset = MaskedDataset(settings.datafile, settings.maskfile, **(settings.data_settings))
+        dataset = MaskedDataset(
+            settings.datafile, settings.maskfile, **(settings.data_settings)
+        )
     else:
         dataset = FilelistDataset(settings.datafile, **(settings.data_settings))
 
-    main(dataset, settings.epochs, settings.network_name, settings.network_settings)
+    main(
+        dataset,
+        settings.epochs,
+        settings.network_name,
+        settings.network_settings,
+        settings=settings,
+    )
