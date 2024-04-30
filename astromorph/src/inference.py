@@ -150,8 +150,8 @@ def main(
         ]
 
     else:
-        labels = list(zip(cluster_labels))
-        headers = ["cluster"]
+        labels = cluster_labels
+        headers = None
 
     writer.add_embedding(
         embeddings, label_img=all_ims, metadata=labels, metadata_header=headers
@@ -161,6 +161,10 @@ def main(
         exportdir = "exported/"
         if not os.path.exists(exportdir):
             os.mkdir(exportdir)
+
+        if headers is None:
+            headers = ["cluster_label"]
+            labels = list(cluster_labels)
 
         embedding_columns = [f"emb_dim_{i}" for i in range(embeddings.shape[1])]
         df_embeddings = pd.DataFrame(columns=embedding_columns, data=embeddings)
