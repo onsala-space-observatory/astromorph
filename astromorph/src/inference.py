@@ -158,6 +158,10 @@ def main(
     )
 
     if export_embeddings:
+        exportdir = "exported/"
+        if not os.path.exists(exportdir):
+            os.mkdir(exportdir)
+
         embedding_columns = [f"emb_dim_{i}" for i in range(embeddings.shape[1])]
         df_embeddings = pd.DataFrame(columns=embedding_columns, data=embeddings)
         df_metadata = pd.DataFrame(columns=headers, data=labels)
