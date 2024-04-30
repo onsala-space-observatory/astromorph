@@ -164,8 +164,9 @@ cython_debug/
 data/*
 runs/*
 saved_models/*
+exported/*
 
 !data/.gitkeep
 !runs/.gitkeep
 !saved_models/.gitkeep
-
+!exported/.gitkeep
