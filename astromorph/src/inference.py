@@ -74,14 +74,14 @@ def create_thumbnail(image: torch.Tensor, thumbnail_size: int):
 def main(
     dataset: Union[MaskedDataset, FilelistDataset],
     model_name: str,
-    export_embeddings=False,
+    export_embeddings: bool = False,
 ):
     """Run the inference.
 
     Args:
-        datafile: FITS filename with the data
-        maskfile: FITS filename with the binary mask
+        dataset: dataset on which to run inference
         model_name: filename of the trained neural network
+        export_embedding: whether to export embeddings
     """
 
     # images is a list of tensors with shape (1, 3, width, height)
@@ -162,7 +162,6 @@ def main(
         df_embeddings = pd.DataFrame(columns=embedding_columns, data=embeddings)
         df_metadata = pd.DataFrame(columns=headers, data=labels)
         df_export = pd.concat([df_metadata, df_embeddings], axis=1)
-
         df_export.to_csv(f"exported/{model_basename}.csv", sep=";")
 
 
