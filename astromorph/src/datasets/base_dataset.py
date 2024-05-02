@@ -9,5 +9,5 @@ class BaseDataset(Dataset):
                    accomodate pre-trained models.
     """
 
-    def __init__(self, stacksize: int = 1) -> None:
+    def __init__(self, stacksize: int = 1, *args, **kwargs) -> None:
         self.stacksize = stacksize
