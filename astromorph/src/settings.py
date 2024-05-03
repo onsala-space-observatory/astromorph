@@ -29,6 +29,7 @@ class TrainingSettings(FileSettings):
     network_name: str
     network_settings: dict
     byol_settings: dict
+    core_limit: int = Field(default=0, ge=0)
 
 
 class InferenceSettings(FileSettings):

@@ -294,6 +294,9 @@ if __name__ == "__main__":
         config_dict = tomllib.load(file)
     settings = TrainingSettings(**config_dict)
 
+    if settings.core_limit:
+        torch.set_num_threads(settings.core_limit)
+
     if settings.maskfile:
         dataset = MaskedDataset(
             settings.datafile, settings.maskfile, **(settings.data_settings)
