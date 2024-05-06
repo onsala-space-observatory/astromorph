@@ -127,7 +127,7 @@ def test_epoch(learner: nn.Module, test_data: DataLoader, device: str = "cpu"):
         learner.eval()
         for item in test_data:
             # The DataLoader will automatically wrap our data in an extra dimension
-            item = item[0]
+            item = item[0].to(device)
 
             ind_loss = learner(item)
             loss += ind_loss.sum()
@@ -218,7 +218,6 @@ def main(
         if torch.cuda.is_available()
         else "mps" if torch.backends.mps.is_available() else "cpu"
     )
-    device = "cpu"
     logger.debug("Using device {}", device)
 
     # Load neural network and augmentation function, and combine into BYOL
@@ -241,7 +240,7 @@ def main(
         hidden_layer="avgpool",
         augment_fn=augmentation_function,
         **(settings.byol_settings)
-    )
+    ).to(device)
 
     # Create optimizer with the BYOL parameters
     optimizer = torch.optim.Adam(learner.parameters(), lr=5e-6)
