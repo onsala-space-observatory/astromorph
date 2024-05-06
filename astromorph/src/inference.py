@@ -3,6 +3,7 @@ import os
 import tomllib
 from typing import Union
 
+from loguru import logger
 import pandas as pd
 from torchvision import models
 import torch
@@ -83,31 +84,38 @@ def main(
         model_name: filename of the trained neural network
         export_embedding: whether to export embeddings
     """
+    device = (
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps" if torch.backends.mps.is_available() else "cpu"
+    )
+    logger.debug("Using device {}", device)
 
     # images is a list of tensors with shape (1, 3, width, height)
-    images = dataset.get_all_items()
+    images = [image.to(device) for image in dataset.get_all_items()]
 
     # Loading model
     print(f"Loading pretrained model {model_name}...")
 
     learner = torch.load(model_name)
     learner.eval()
+    learner.to(device)
 
     print("Calculating embeddings...")
     with torch.no_grad():
         _, dummy_embeddings = learner(images[0], return_embedding=True)
         embeddings_dim = dummy_embeddings.shape[1]
-        embeddings = torch.empty((0, embeddings_dim))
+        embeddings = torch.empty((0, embeddings_dim)).to(device)
         for image in tqdm(images):
             proj, emb = learner(image, return_embedding=True)
             embeddings = torch.cat((embeddings, emb), dim=0)
 
     print("Clustering embeddings...")
     clusterer = cluster.KMeans(n_clusters=10)
-    cluster_labels = clusterer.fit_predict(embeddings)
+    cluster_labels = clusterer.fit_predict(embeddings.cpu())
 
     print("Producing thumbnails...")
-    plot_images = [normalize_image(image) for image in images]
+    plot_images = [normalize_image(image.cpu()) for image in images]
 
     # If thumbnails are too large, TensorBoard runs out of memory
     thumbnail_size = 144
@@ -167,7 +175,7 @@ def main(
             labels = list(cluster_labels)
 
         embedding_columns = [f"emb_dim_{i}" for i in range(embeddings.shape[1])]
-        df_embeddings = pd.DataFrame(columns=embedding_columns, data=embeddings)
+        df_embeddings = pd.DataFrame(columns=embedding_columns, data=embeddings.cpu())
         df_metadata = pd.DataFrame(columns=headers, data=labels)
         df_export = pd.concat([df_metadata, df_embeddings], axis=1)
         df_export.to_csv(f"exported/{model_basename}.csv", sep=";")
