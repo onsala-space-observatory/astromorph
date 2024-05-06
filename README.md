@@ -66,7 +66,7 @@ We do this using the following commands:
 
 ```bash
 # Find the filenames and store them in data/inputfiles.txt
-$ find data -type f -size -10M -path "**.fits" > data/inputfiles.txt
+$ find /full/path/to/datadirectory/ -type f -size -10M -name "**.fits" > data/inputfiles.txt
 $ python astromorph/src/basic_training.py -c training_settings.toml
 ```
 
