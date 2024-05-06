@@ -252,8 +252,8 @@ def main(
     )
 
     # DataLoaders have batch_size=1, because images have different sizes
-    train_data = DataLoader(train_dataset, batch_size=1, shuffle=True)
-    test_data = DataLoader(test_dataset, batch_size=1, shuffle=True)
+    train_data = DataLoader(train_dataset, batch_size=1, shuffle=True, pin_memory=True)
+    test_data = DataLoader(test_dataset, batch_size=1, shuffle=True, pin_memory=True)
 
     # If necessary, create the folder saved_models.
     # Also, ensure it does not show up in git
