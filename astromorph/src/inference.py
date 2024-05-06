@@ -89,19 +89,19 @@ def main(
         if torch.cuda.is_available()
         else "mps" if torch.backends.mps.is_available() else "cpu"
     )
-    logger.debug("Using device {}", device)
+    logger.info("Using device {}", device)
 
     # images is a list of tensors with shape (1, 3, width, height)
     images = [image.to(device) for image in dataset.get_all_items()]
 
     # Loading model
-    print(f"Loading pretrained model {model_name}...")
+    logger.info(f"Loading pretrained model {model_name}...")
 
     learner = torch.load(model_name)
     learner.eval()
     learner.to(device)
 
-    print("Calculating embeddings...")
+    logger.info("Calculating embeddings...")
     with torch.no_grad():
         _, dummy_embeddings = learner(images[0], return_embedding=True)
         embeddings_dim = dummy_embeddings.shape[1]
@@ -110,11 +110,11 @@ def main(
             proj, emb = learner(image, return_embedding=True)
             embeddings = torch.cat((embeddings, emb), dim=0)
 
-    print("Clustering embeddings...")
+    logger.info("Clustering embeddings...")
     clusterer = cluster.KMeans(n_clusters=10)
     cluster_labels = clusterer.fit_predict(embeddings.cpu())
 
-    print("Producing thumbnails...")
+    logger.info("Producing thumbnails...")
     plot_images = [normalize_image(image.cpu()) for image in images]
 
     # If thumbnails are too large, TensorBoard runs out of memory
@@ -210,7 +210,7 @@ if __name__ == "__main__":
     # Use InferenceSettings to validate settings
     settings = InferenceSettings(**config_dict)
 
-    print("Reading data")
+    logger.info("Reading data")
     if settings.maskfile:
         dataset = MaskedDataset(
             settings.datafile, settings.maskfile, **(settings.data_settings)
