@@ -98,10 +98,16 @@ class FilelistDataset(BaseDataset):
         """
         object_properties = []
         for filename in self.filenames:
-            header = fits.open(filename).pop().header
+            with fits.open(filename) as file:
+                header = file.pop().header
             try:
                 object_property = header[keyword]
+            # If the object property is not present, return an N/A
             except KeyError:
+                object_property = "N/A"
+            # If the property is present, but has an empty value, return N/A
+            # Otherwise it messes up the search function in tensorboard
+            if isinstance(object_property, str) and not object_property.strip(" "):
                 object_property = "N/A"
             object_properties.append(object_property)
         return object_properties
