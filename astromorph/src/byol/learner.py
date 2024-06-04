@@ -74,8 +74,8 @@ class ByolTrainer(nn.Module):
             self.byol.parameters(), lr=learning_rate
         )
 
-    def forward(self, x):
-        return self.byol.forward(x, return_embedding=True, return_projection=False)
+    def forward(self, x, return_errors=False):
+        return self.byol(x, return_errors=return_errors)
 
     def train_epoch(self, train_data: DataLoader, batch_size: int = 16):
         total_loss = 0.0
@@ -83,7 +83,7 @@ class ByolTrainer(nn.Module):
 
         for i, image in enumerate(tqdm(train_data)):
             image = image[0]
-            loss = self.byol(image)
+            loss = self.byol(image, return_errors=True)
 
             batch_loss = batch_loss + loss if batch_loss else loss
             total_loss += loss.sum()
@@ -104,7 +104,7 @@ class ByolTrainer(nn.Module):
             for item in test_data:
                 # The DataLoader will automatically wrap our data in an extra dimension
                 item = item[0]
-                ind_loss = self.byol(item)
+                ind_loss = self.byol(item, return_errors=True)
                 loss += ind_loss.sum()
         return loss
 
