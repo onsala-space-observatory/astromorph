@@ -5,6 +5,7 @@ from loguru import logger
 from torch import nn
 import torch
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard.writer import SummaryWriter
 from torchvision import transforms as T
 from tqdm import tqdm
 
@@ -82,7 +83,7 @@ class ByolTrainer(nn.Module):
 
         for i, image in enumerate(tqdm(train_data)):
             image = image[0]
-            loss = self.train_single_image(image)
+            loss = self.byol(image)
 
             batch_loss = batch_loss + loss if batch_loss else loss
             total_loss += loss.sum()
@@ -92,10 +93,43 @@ class ByolTrainer(nn.Module):
                 self.optimizer.step()
                 self.optimizer.zero_grad()
                 self.byol.update_moving_average()
-                batch_loss=None
+                batch_loss = None
 
         return total_loss
 
-    def train_single_image(self, image):
-        return self.byol(image)
+    def test(self, test_data: DataLoader):
+        loss = 0
+        with torch.no_grad():
+            self.byol.eval()
+            for item in test_data:
+                # The DataLoader will automatically wrap our data in an extra dimension
+                item = item[0]
+                ind_loss = self.byol(item)
+                loss += ind_loss.sum()
+        return loss
+
+    def train_model(
+        self,
+        train_data: DataLoader,
+        test_data: DataLoader,
+        epochs: int = 10,
+        writer=None,
+        log_dir="runs/",
+        save_file=None,
+        **kwargs
+    ):
+
+        writer = SummaryWriter(log_dir=log_dir)
+        for epoch in range(epochs):
+            train_loss = self.train_epoch(train_data, **kwargs)
+            writer.add_scalar("Train loss", train_loss/len(train_data), epoch, new_style=True)
+            logger.info(f"[Epoch {epoch}] Training loss: {train_loss / len(train_data):.3e}")
+            
+            test_loss = self.test(test_data)
+            writer.add_scalar("Test loss", test_loss/len(test_data), epoch, new_style=True)
+            logger.info(f"[Epoch {epoch}] Test OOS loss: {test_loss / len(test_data):.3e}")
+
+        if save_file:
+            torch.save(self, save_file)
+            logger.info(f"Model saved to {save_file}")
 
