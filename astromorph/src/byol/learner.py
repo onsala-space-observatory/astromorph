@@ -9,8 +9,6 @@ from torch.utils.tensorboard.writer import SummaryWriter
 from torchvision import transforms as T
 from tqdm import tqdm
 
-from basic_training import train_single_image
-
 from .byol import BYOL
 
 
@@ -53,7 +51,7 @@ class ByolTrainer(nn.Module):
         representation_size: int = 128,
         augmentation_function: Optional[Callable] = None,
         learning_rate: float = 5.0e-6,
-        **kwargs
+        **kwargs,
     ) -> None:
         super().__init__()
 
@@ -74,10 +72,30 @@ class ByolTrainer(nn.Module):
             self.byol.parameters(), lr=learning_rate
         )
 
-    def forward(self, x, return_errors=False):
+    def forward(self, x: torch.Tensor, return_errors: bool = False):
+        """Run data through the model.
+
+        The model will return either embeddings, or the errors.
+
+        Args:
+            x: input data
+            return_errors: flag for returning errors instead of embeddings
+
+        Returns:
+            Embeddings or errors
+        """
         return self.byol(x, return_errors=return_errors)
 
     def train_epoch(self, train_data: DataLoader, batch_size: int = 16):
+        """Train the model for a single epoch.
+
+        Args:
+            train_data: the training data
+            batch_size: batch size of the data
+
+        Returns:
+            the total loss
+        """
         total_loss = 0.0
         batch_loss = None
 
@@ -98,6 +116,14 @@ class ByolTrainer(nn.Module):
         return total_loss
 
     def test(self, test_data: DataLoader):
+        """Get out-of-sample errors on a test data set.
+
+        Args:
+            test_data: the test data set
+
+        Returns:
+            the out-of-sample test errors
+        """
         loss = 0
         with torch.no_grad():
             self.byol.eval()
@@ -113,23 +139,41 @@ class ByolTrainer(nn.Module):
         train_data: DataLoader,
         test_data: DataLoader,
         epochs: int = 10,
-        writer=None,
-        log_dir="runs/",
-        save_file=None,
-        **kwargs
+        writer: Optional[SummaryWriter] = None,
+        log_dir: str = "runs/",
+        save_file: Optional[str] = None,
+        **kwargs,
     ):
 
+        """Train the BYOL model for a given number of epochs.
+
+        Args:
+            train_data: data for training
+            test_data: data for evaluating out-of-sample performance
+            epochs: number of epochs to train for
+            writer:  
+            log_dir: 
+            save_file: 
+            **kwargs: 
+        """
         writer = SummaryWriter(log_dir=log_dir)
         for epoch in range(epochs):
             train_loss = self.train_epoch(train_data, **kwargs)
-            writer.add_scalar("Train loss", train_loss/len(train_data), epoch, new_style=True)
-            logger.info(f"[Epoch {epoch}] Training loss: {train_loss / len(train_data):.3e}")
-            
+            writer.add_scalar(
+                "Train loss", train_loss / len(train_data), epoch, new_style=True
+            )
+            logger.info(
+                f"[Epoch {epoch}] Training loss: {train_loss / len(train_data):.3e}"
+            )
+
             test_loss = self.test(test_data)
-            writer.add_scalar("Test loss", test_loss/len(test_data), epoch, new_style=True)
-            logger.info(f"[Epoch {epoch}] Test OOS loss: {test_loss / len(test_data):.3e}")
+            writer.add_scalar(
+                "Test loss", test_loss / len(test_data), epoch, new_style=True
+            )
+            logger.info(
+                f"[Epoch {epoch}] Test OOS loss: {test_loss / len(test_data):.3e}"
+            )
 
         if save_file:
             torch.save(self, save_file)
             logger.info(f"Model saved to {save_file}")
-
