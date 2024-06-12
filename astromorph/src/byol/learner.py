@@ -51,6 +51,7 @@ class ByolTrainer(nn.Module):
         representation_size: int = 128,
         augmentation_function: Optional[Callable] = None,
         learning_rate: float = 5.0e-6,
+        device: str = "cpu",
         **kwargs,
     ) -> None:
         super().__init__()
@@ -71,6 +72,8 @@ class ByolTrainer(nn.Module):
         self.optimizer = self.DEFAULT_OPTIMIZER(
             self.byol.parameters(), lr=learning_rate
         )
+
+        self.to_device(device)
 
     def forward(self, x: torch.Tensor, return_errors: bool = False):
         """Run data through the model.
@@ -100,7 +103,7 @@ class ByolTrainer(nn.Module):
         batch_loss = None
 
         for i, image in enumerate(tqdm(train_data)):
-            image = image[0]
+            image = image[0].to(self.device)
             loss = self.byol(image, return_errors=True)
 
             batch_loss = batch_loss + loss if batch_loss else loss
@@ -129,7 +132,7 @@ class ByolTrainer(nn.Module):
             self.byol.eval()
             for item in test_data:
                 # The DataLoader will automatically wrap our data in an extra dimension
-                item = item[0]
+                item = item[0].to(self.device)
                 ind_loss = self.byol(item, return_errors=True)
                 loss += ind_loss.sum()
         return loss
@@ -177,3 +180,7 @@ class ByolTrainer(nn.Module):
         if save_file:
             torch.save(self, save_file)
             logger.info(f"Model saved to {save_file}")
+
+    def to_device(self, device, *args, **kwargs):
+            self.to(device, *args, **kwargs)
+            self.device = device
