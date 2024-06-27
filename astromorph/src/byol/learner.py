@@ -50,6 +50,7 @@ class ByolTrainer(nn.Module):
         hidden_layer: str = "avgpool",
         representation_size: int = 128,
         augmentation_function: Optional[Callable] = None,
+        optimizer: Optional[Callable] = None,
         learning_rate: float = 5.0e-6,
         device: str = "cpu",
         **kwargs,
@@ -69,7 +70,8 @@ class ByolTrainer(nn.Module):
             representation_size=representation_size,
         )
 
-        self.optimizer = self.DEFAULT_OPTIMIZER(
+        optimizer = self.DEFAULT_OPTIMIZER if optimizer is None else optimizer
+        self.optimizer = optimizer(
             self.byol.parameters(), lr=learning_rate
         )
 
