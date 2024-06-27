@@ -94,12 +94,11 @@ class BYOL(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        return_embedding: bool = False,
-        return_projection: bool = True,
+        return_errors: bool = False,
     ):
 
-        if return_embedding:
-            return self.online_encoder(x, return_projection=return_projection)
+        if not return_errors:
+            return self.online_encoder(x, return_projection=False)
 
         # augment_function is stochastic --> image_1 != image_2
         image_1, image_2 = self.augment_function(x), self.augment_function(x)
