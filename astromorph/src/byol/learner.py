@@ -2,8 +2,8 @@ from typing import Callable, Optional
 import random
 
 from loguru import logger
-from torch import nn
 import torch
+from torch import nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard.writer import SummaryWriter
 from torchvision import transforms as T
@@ -55,6 +55,17 @@ class ByolTrainer(nn.Module):
         device: str = "cpu",
         **kwargs,
     ) -> None:
+        """Construct the ByolTrainer instance.
+
+        Args:
+            network: core CNN around which the BYOL framework is built
+            hidden_layer: the layer of the CNN to intercept
+            representation_size: the size of the embedding vectors
+            augmentation_function: stochastic augmentation function
+            optimizer: optimizer to use for the training process
+            learning_rate: learning rate to apply to the optimizer
+            device: device on which the training will take place
+        """
         super().__init__()
 
         self.augmentation_function = (
