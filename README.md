@@ -57,9 +57,10 @@ The `BYOL` class provides the most flexibility, but requires some experience wit
 
 ### BYOL Class
 
-The `BYOL` class is a subclass of `pytorch.nn.Module`, and can therefore be used lake any other PyTorch module.
+The `BYOL` class is a subclass of `pytorch.nn.Module`, and can therefore be used like any other PyTorch module.
 
 **NB: remember to call the `update_moving_average()` method after every optimization step.**
+If you do not know why you have to do this, please have a look at the original paper at <https://arxiv.org/abs/2006.07733>.
 
 ### ByolTrainer
 
@@ -170,6 +171,25 @@ network_name = "n_layer_resnet"
 last_layer = "layer2"
 ```
 
+##### Other settings
+
+Other settings that can be set in a config file are the following:
+```toml
+# Limit the number of cores used in the training process
+core_limit = 4
+
+# If the network expects 3-channel RGB images, but you have single-channel images
+[data_settings]
+stacksize = 3
+
+# Specify dimensions for the BYOL components
+[byol_settings]
+representation_size = 128
+projection_size = 16
+projection_hidden_size = 512
+use_momentum = true # Target network is exponential MA of online network.
+```
+
 #### Inference
 
 To run a trained network on some data, we will have to specify the location of the trained neural network.
@@ -181,6 +201,8 @@ datafile = "data/inputfiles.txt"
 epochs = 5
 network_name = "n_layer_resnet"
 trained_network_name = "saved_models/newly_trained_network.pt"
+
+export_to_csv = true # Export embeddings and metadata to a CSV file
 
 [network_settings]
 last_layer = "layer2"
