@@ -173,13 +173,10 @@ def train(
     return model
 
 
-def main(
-    full_dataset: Dataset,
-    epochs: int,
-    network_name: str,
-    network_settings: dict,
-    settings: Optional[TrainingSettings] = None,
-):
+def main(full_dataset: Dataset, settings: TrainingSettings):
+    epochs = settings.epochs
+    network_name = settings.network_name
+    network_settings = settings.network_settings
     # Timestamp to identify training runs
     start_time = dt.datetime.now().strftime("%Y%m%d_%H%M")
     logger.add(f"logs/{start_time}.log")
@@ -279,10 +276,4 @@ if __name__ == "__main__":
     else:
         dataset = FilelistDataset(settings.datafile, **(settings.data_settings))
 
-    main(
-        dataset,
-        settings.epochs,
-        settings.network_name,
-        settings.network_settings,
-        settings=settings,
-    )
+    main(dataset, settings=settings)
