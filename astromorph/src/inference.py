@@ -15,7 +15,7 @@ from skimage.transform import resize
 from sklearn import cluster
 
 # Provide these to the namespace for the read models
-from basic_training import RandomApply, BYOL
+from basic_training import BYOL
 from datasets import MaskedDataset, FilelistDataset
 from models import NLayerResnet
 from settings import InferenceSettings

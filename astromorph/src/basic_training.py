@@ -22,28 +22,6 @@ from models import DEFAULT_MODELS
 from settings import TrainingSettings
 
 
-class RandomApply(nn.Module):
-    """A class to provide a probability-layer in a neural network.
-
-    When added as a layer to a neural network, it has probability _p_ to apply
-    function _fn_ to the input. In other cases it will just forward the input.
-
-    Attributes:
-        fn:
-        p:
-    """
-
-    def __init__(self, fn: Callable, p: float):
-        super().__init__()
-        self.fn = fn
-        self.p = p
-
-    def forward(self, x):
-        if random.random() > self.p:
-            return x
-        return self.fn(x)
-
-
 def train_single_image(learner, image, device="cpu"):
     learn_image = image.to(device)
 
@@ -224,11 +202,11 @@ def main(
     network = DEFAULT_MODELS[network_name](**network_settings).to(device)
 
     augmentation_function = torch.nn.Sequential(
-        RandomApply(T.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.3),
+        T.RandomApply(T.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.3),
         T.RandomGrayscale(p=0.2),
         T.RandomHorizontalFlip(),
         T.RandomRotation(degrees=(0, 360)),
-        RandomApply(T.GaussianBlur((3, 3), (1.0, 2.0)), p=0.2),
+        T.RandomApply(T.GaussianBlur((3, 3), (1.0, 2.0)), p=0.2),
         T.Normalize(
             mean=torch.tensor([0.485, 0.456, 0.406]),
             std=torch.tensor([0.229, 0.224, 0.225]),

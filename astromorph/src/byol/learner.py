@@ -12,34 +12,12 @@ from tqdm import tqdm
 from .byol import BYOL
 
 
-class RandomApply(nn.Module):
-    """A class to provide a probability-layer in a neural network.
-
-    When added as a layer to a neural network, it has probability _p_ to apply
-    function _fn_ to the input. In other cases it will just forward the input.
-
-    Attributes:
-        fn:
-        p:
-    """
-
-    def __init__(self, fn: Callable, p: float):
-        super().__init__()
-        self.fn = fn
-        self.p = p
-
-    def forward(self, x):
-        if random.random() > self.p:
-            return x
-        return self.fn(x)
-
-
 class ByolTrainer(nn.Module):
 
     DEFAULT_AUGMENTATION_FUNCTION = nn.Sequential(
         T.RandomHorizontalFlip(),
         T.RandomRotation(degrees=(0, 360)),
-        RandomApply(T.GaussianBlur((3, 3), (1.0, 2.0)), p=0.2),
+        T.RandomApply(T.GaussianBlur((3, 3), (1.0, 2.0)), p=0.2),
     )
 
     DEFAULT_OPTIMIZER = torch.optim.Adam
