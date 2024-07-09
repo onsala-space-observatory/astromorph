@@ -105,7 +105,7 @@ def test_epoch(learner: nn.Module, test_data: DataLoader, device: str = "cpu"):
             # The DataLoader will automatically wrap our data in an extra dimension
             item = item[0].to(device)
 
-            ind_loss = learner(item)
+            ind_loss = learner(item, return_errors=True)
             loss += ind_loss.sum()
     return loss
 
