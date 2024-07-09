@@ -2,8 +2,7 @@ import argparse
 import datetime as dt
 import os
 import pprint
-import random
-from typing import Callable, Optional
+from typing import Optional
 
 from loguru import logger
 import tomllib
@@ -12,7 +11,6 @@ from torch import nn
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.tensorboard import SummaryWriter
-from torchvision import models as tvmodels
 from torchvision import transforms as T
 from tqdm import tqdm
 
