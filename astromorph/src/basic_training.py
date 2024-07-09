@@ -47,7 +47,7 @@ class RandomApply(nn.Module):
 def train_single_image(learner, image, device="cpu"):
     learn_image = image.to(device)
 
-    loss = learner(learn_image)
+    loss = learner(learn_image, return_errors=True)
     return learner, loss
 
 
@@ -90,7 +90,7 @@ def train_epoch(
         learner, loss = train_single_image(learner, image, device)
 
         # Keep track of batch loss and epoch loss
-        batch_loss = batch_loss + loss if batch_loss else loss
+        batch_loss = batch_loss + loss if batch_loss is not None else loss
         total_loss += loss.sum()
 
         # Do backwards step after _batch_size_ iterations
