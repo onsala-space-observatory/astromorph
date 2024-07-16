@@ -1,9 +1,9 @@
-import random
 from typing import Any, Callable, Optional, Type
 
 from loguru import logger
 import torch
 from torch import nn
+from torch.optim import Adam
 from torch.optim.lr_scheduler import LRScheduler
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard.writer import SummaryWriter
@@ -21,7 +21,7 @@ class ByolTrainer(nn.Module):
         T.RandomApply(T.GaussianBlur((3, 3), (1.0, 2.0)), p=0.2),
     )
 
-    DEFAULT_OPTIMIZER = torch.optim.Adam
+    DEFAULT_OPTIMIZER = Adam
 
     def __init__(
         self,
