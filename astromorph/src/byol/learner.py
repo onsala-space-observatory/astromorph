@@ -172,7 +172,7 @@ class ByolTrainer(nn.Module):
             **kwargs:
         """
         writer = SummaryWriter(log_dir=log_dir)
-        for epoch in range(epochs):
+        for epoch in range(1, epochs+1):
             if self.lr_scheduler is not None:
                 logger.info(f"[Epoch {epoch}] Learning rate: {self.lr_scheduler.get_last_lr()[0]:.3e}")
             train_loss = self.train_epoch(train_data, summary_writer=writer, **kwargs)
