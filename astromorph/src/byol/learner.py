@@ -1,9 +1,10 @@
-from typing import Callable, Optional
 import random
+from typing import Any, Callable, Optional, Type
 
 from loguru import logger
 import torch
 from torch import nn
+from torch.optim.lr_scheduler import LRScheduler
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard.writer import SummaryWriter
 from torchvision import transforms as T
@@ -30,6 +31,8 @@ class ByolTrainer(nn.Module):
         augmentation_function: Optional[Callable] = None,
         optimizer: Optional[Callable] = None,
         learning_rate: float = 5.0e-6,
+        lr_scheduler: Optional[Type[LRScheduler]] = None,
+        lr_scheduler_options: dict[str, Any] = {},
         device: str = "cpu",
         **kwargs,
     ) -> None:
@@ -61,6 +64,12 @@ class ByolTrainer(nn.Module):
 
         optimizer = self.DEFAULT_OPTIMIZER if optimizer is None else optimizer
         self.optimizer = optimizer(self.byol.parameters(), lr=learning_rate)
+
+        if lr_scheduler is not None:
+            self.lr_scheduler = lr_scheduler(self.optimizer, **lr_scheduler_options)
+        else:
+            self.lr_scheduler = None
+
 
         self.to_device(device)
         self._batch_index = 0
@@ -164,6 +173,8 @@ class ByolTrainer(nn.Module):
         """
         writer = SummaryWriter(log_dir=log_dir)
         for epoch in range(epochs):
+            if self.lr_scheduler is not None:
+                logger.info(f"[Epoch {epoch}] Learning rate: {self.lr_scheduler.get_last_lr()[0]:.3e}")
             train_loss = self.train_epoch(train_data, summary_writer=writer, **kwargs)
             writer.add_scalar(
                 "Train loss", train_loss / len(train_data), epoch, new_style=True
@@ -179,6 +190,8 @@ class ByolTrainer(nn.Module):
             logger.info(
                 f"[Epoch {epoch}] Test OOS loss: {test_loss / len(test_data):.3e}"
             )
+            if self.lr_scheduler is not None:
+                self.lr_scheduler.step()
 
         if save_file:
             torch.save(self, save_file)
