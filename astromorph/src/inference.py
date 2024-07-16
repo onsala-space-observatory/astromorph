@@ -103,11 +103,11 @@ def main(
 
     logger.info("Calculating embeddings...")
     with torch.no_grad():
-        _, dummy_embeddings = learner(images[0], return_embedding=True)
+        dummy_embeddings = learner(images[0]) #, return_embedding=True)
         embeddings_dim = dummy_embeddings.shape[1]
         embeddings = torch.empty((0, embeddings_dim)).to(device)
         for image in tqdm(images):
-            proj, emb = learner(image, return_embedding=True)
+            emb = learner(image) #, return_embedding=True)
             embeddings = torch.cat((embeddings, emb), dim=0)
 
     logger.info("Clustering embeddings...")
