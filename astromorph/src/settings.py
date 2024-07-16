@@ -30,6 +30,9 @@ class TrainingSettings(FileSettings):
     network_settings: dict
     byol_settings: dict
     core_limit: int = Field(default=0, ge=0)
+    learning_rate: float = Field(default=5e-6)
+    exponential_lr: bool = Field(default=False)
+    gamma: float = Field(default=0.99, gt=0, lt=1)
 
 
 class InferenceSettings(FileSettings):
