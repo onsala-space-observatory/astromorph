@@ -33,6 +33,7 @@ class TrainingSettings(FileSettings):
     learning_rate: float = Field(default=5e-6)
     exponential_lr: bool = Field(default=False)
     gamma: float = Field(default=0.99, gt=0, lt=1)
+    batch_size: int = Field(default=16, gt=0)
 
 
 class InferenceSettings(FileSettings):

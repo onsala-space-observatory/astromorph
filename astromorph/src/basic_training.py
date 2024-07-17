@@ -90,6 +90,7 @@ def main(full_dataset: Dataset, settings: TrainingSettings):
         epochs=epochs,
         log_dir=f"runs/{start_time}/",
         save_file=model_file_name,
+        batch_size=settings.batch_size
     )
 
 
