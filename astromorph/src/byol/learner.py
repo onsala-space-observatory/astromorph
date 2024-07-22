@@ -60,6 +60,7 @@ class ByolTrainer(nn.Module):
             hidden_layer=hidden_layer,
             augmentation_function=self.augmentation_function,
             representation_size=representation_size,
+            **kwargs
         )
 
         optimizer = self.DEFAULT_OPTIMIZER if optimizer is None else optimizer
