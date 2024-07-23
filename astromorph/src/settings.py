@@ -20,7 +20,6 @@ FileName = Annotated[str, AfterValidator(path_exists), AfterValidator(is_file)]
 
 class FileSettings(BaseModel):
     datafile: FileName
-    maskfile: FileName = Field(default='', validate_default=False)
     data_settings: dict = Field(default={})
 
 

@@ -1,10 +1,8 @@
 from typing import Union
 
-import numpy as np
 import torch
 
 from astropy.io import fits
-from torch.utils.data import Dataset
 
 from .helpers import augment_image, make_4D
 from .base_dataset import BaseDataset

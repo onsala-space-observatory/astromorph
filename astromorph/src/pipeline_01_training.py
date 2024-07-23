@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms as T
 
 from byol import ByolTrainer
-from datasets import MaskedDataset, FilelistDataset
+from datasets import FilelistDataset
 from models import DEFAULT_MODELS
 from settings import TrainingSettings
 
@@ -110,11 +110,6 @@ if __name__ == "__main__":
     if settings.core_limit:
         torch.set_num_threads(settings.core_limit)
 
-    if settings.maskfile:
-        dataset = MaskedDataset(
-            settings.datafile, settings.maskfile, **(settings.data_settings)
-        )
-    else:
-        dataset = FilelistDataset(settings.datafile, **(settings.data_settings))
+    dataset = FilelistDataset(settings.datafile, **(settings.data_settings))
 
     main(dataset, settings=settings)
