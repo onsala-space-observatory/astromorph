@@ -13,8 +13,8 @@ python astromorph/src/pipeline_training.py -c settings.toml
 
 You have to provide it with the following information
 - name of the file with a list of data filenames (`datafile = "filelist.txt"`)
-- network name, choosing from `"n_layer_resnet"` and `"cloudscanner"` (this name still needs to be changed). 
-  These are 2 pre-designed neural network architectures to choose from, with the cloudscanner being more lightweight.
+- network name, choosing from `"n_layer_resnet"` and `"amm"` (this name still needs to be changed). 
+  These are 2 pre-designed neural network architectures to choose from, with the amm being more lightweight.
 - representation size, the size of the vector that comes out of the neural network, under the header `[byol_settings]`.
 
 Other optional settings are:

@@ -48,7 +48,7 @@ In this package we provide the following functionalities:
 - the `BYOL` class as a PyTorch implementation of the BYOL framework;
 - the `ByolTrainer` class wraps around `BYOL` to provide an easy training interface;
 - a FilelistDataset for easy handling of sets of FITS files;
-- a light-weight 2D convolutional neural network called `CloudScanner`
+- a light-weight 2D convolutional neural network called `AstroMorphologyModel`
 - a configurable training script for basic command line use;
 - a configurable inference script for easy inspection of the resulting embeddings.
 
@@ -69,16 +69,16 @@ Primarily, one only needs to specify the core network and the dimensionality of 
 More customization is possible through providing an augmentation function, an optimizer, a learning rate, etc.
 For training, one only needs two PyTorch `DataLoader` instances for the training- and test-set.
 
-See below for a basic example using the `CloudScanner` network from this package:
+See below for a basic example using the `AstroMorphologyModel` network from this package:
 
 ```python
 from torch.utils.data import DataLoader
-from astromorph import CloudScanner, ByolTrainer
+from astromorph import AstroMorphologyModel, ByolTrainer
 
 train_data = DataLoader(...)
 test_data = DataLoader(...)
 
-model = ByolTrainer(CloudScanner(), representation_size=128)
+model = ByolTrainer(AstroMorphologyModel(), representation_size=128)
 
 model.train_model(train_data=train_data, test_data=test_data, epochs=10)
 ```
