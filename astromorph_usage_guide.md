@@ -6,7 +6,7 @@ The easiest way is by using the pipeline, slightly more difficult is the ByolTra
 ## Pipeline
 
 ### Training
-The pipeline needs to be provided with a settings file, by using the following command (The filename still needs to be changed in the code.)
+The pipeline needs to be provided with a settings file, by using the following command.
 ```bash
 python astromorph/src/pipeline_training.py -c settings.toml
 ```

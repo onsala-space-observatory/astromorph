@@ -95,7 +95,7 @@ This file can be passed to the script with the `-c` or `--config-file` flag.
 The script should be invoked from the main folder of the repository:
 
 ```bash
-python astromorph/src/basic_training.py -c example_settings.toml
+python astromorph/src/pipeline_01_training.py -c example_settings.toml
 ```
 
 #### Training
@@ -111,7 +111,7 @@ We do this using the following commands:
 ```bash
 # Find the filenames and store them in data/inputfiles.txt
 $ find /full/path/to/datadirectory/ -type f -size -10M -name "**.fits" > data/inputfiles.txt
-$ python astromorph/src/basic_training.py -c training_settings.toml
+$ python astromorph/src/pipeline_01_training.py -c training_settings.toml
 ```
 
 In this example, `training_settings.toml` would look similar to
@@ -213,14 +213,14 @@ The non-relevant options (e.g. `epochs`) will be ignored, so you can reuse the c
 Alternatively, you can specify the relevant options using the command line, as shown here:
 
 ```bash
-python astromorph/src/inference.py -d <data-file> -m <mask-file> -n <trained-network-file>
+python astromorph/src/pipeline_02_inference.py -d <data-file> -m <mask-file> -n <trained-network-file>
 ```
 
 It is even possible to use a combination of config file and command line options.
 The options given in the command line will overrule the settings specified in the config file.
 
 ```bash
-python astromorph/src/inference.py -c example_settings.toml -n saved_models/newly_trained_network.pt
+python astromorph/src/pipeline_02_inference.py -c example_settings.toml -n saved_models/newly_trained_network.pt
 ```
 
 ### Visualisation
