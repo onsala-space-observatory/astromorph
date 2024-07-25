@@ -20,7 +20,6 @@ FileName = Annotated[str, AfterValidator(path_exists), AfterValidator(is_file)]
 
 class FileSettings(BaseModel):
     datafile: FileName
-    maskfile: FileName = Field(default='', validate_default=False)
     data_settings: dict = Field(default={})
 
 
@@ -30,6 +29,10 @@ class TrainingSettings(FileSettings):
     network_settings: dict
     byol_settings: dict
     core_limit: int = Field(default=0, ge=0)
+    learning_rate: float = Field(default=5e-6)
+    exponential_lr: bool = Field(default=False)
+    gamma: float = Field(default=0.99, gt=0, lt=1)
+    batch_size: int = Field(default=16, gt=0)
 
 
 class InferenceSettings(FileSettings):

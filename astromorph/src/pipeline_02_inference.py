@@ -15,8 +15,8 @@ from skimage.transform import resize
 from sklearn import cluster
 
 # Provide these to the namespace for the read models
-from basic_training import RandomApply, BYOL
-from datasets import MaskedDataset, FilelistDataset
+from byol import ByolTrainer
+from datasets import FilelistDataset
 from models import NLayerResnet
 from settings import InferenceSettings
 
@@ -73,7 +73,7 @@ def create_thumbnail(image: torch.Tensor, thumbnail_size: int):
 
 
 def main(
-    dataset: Union[MaskedDataset, FilelistDataset],
+    dataset: FilelistDataset,
     model_name: str,
     export_embeddings: bool = False,
 ):
@@ -103,11 +103,11 @@ def main(
 
     logger.info("Calculating embeddings...")
     with torch.no_grad():
-        _, dummy_embeddings = learner(images[0], return_embedding=True)
+        dummy_embeddings = learner(images[0]) #, return_embedding=True)
         embeddings_dim = dummy_embeddings.shape[1]
         embeddings = torch.empty((0, embeddings_dim)).to(device)
         for image in tqdm(images):
-            proj, emb = learner(image, return_embedding=True)
+            emb = learner(image) #, return_embedding=True)
             embeddings = torch.cat((embeddings, emb), dim=0)
 
     logger.info("Clustering embeddings...")
@@ -211,11 +211,6 @@ if __name__ == "__main__":
     settings = InferenceSettings(**config_dict)
 
     logger.info("Reading data")
-    if settings.maskfile:
-        dataset = MaskedDataset(
-            settings.datafile, settings.maskfile, **(settings.data_settings)
-        )
-    else:
-        dataset = FilelistDataset(settings.datafile, **(settings.data_settings))
+    dataset = FilelistDataset(settings.datafile, **(settings.data_settings))
 
     main(dataset, settings.trained_network_name, settings.export_to_csv)

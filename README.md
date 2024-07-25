@@ -41,9 +41,53 @@ $ source .venv/bin/activate
 $ pip install -r requirements.txt
 ```
 
-## Running
+## Package contents
 
-### Basic configuration
+In this package we provide the following functionalities:
+
+- the `BYOL` class as a PyTorch implementation of the BYOL framework;
+- the `ByolTrainer` class wraps around `BYOL` to provide an easy training interface;
+- a FilelistDataset for easy handling of sets of FITS files;
+- a light-weight 2D convolutional neural network called `AstroMorphologyModel`
+- a configurable training script for basic command line use;
+- a configurable inference script for easy inspection of the resulting embeddings.
+
+The `BYOL` class provides the most flexibility, but requires some experience with setting up a training routine in PyTorch.
+`ByolTrainer` and the training script provide more ease-of-use at the cost of some flexibility.
+
+### BYOL Class
+
+The `BYOL` class is a subclass of `pytorch.nn.Module`, and can therefore be used like any other PyTorch module.
+
+**NB: remember to call the `update_moving_average()` method after every optimization step.**
+If you do not know why you have to do this, please have a look at the original paper at <https://arxiv.org/abs/2006.07733>.
+
+### ByolTrainer
+
+The `ByolTrainer` class is a wrapper around `BYOL` providing an easy-to-use interface for those less experienced in neural networks.
+Primarily, one only needs to specify the core network and the dimensionality of the resulting embeddings.
+More customization is possible through providing an augmentation function, an optimizer, a learning rate, etc.
+For training, one only needs two PyTorch `DataLoader` instances for the training- and test-set.
+
+See below for a basic example using the `AstroMorphologyModel` network from this package:
+
+```python
+from torch.utils.data import DataLoader
+from astromorph import AstroMorphologyModel, ByolTrainer
+
+train_data = DataLoader(...)
+test_data = DataLoader(...)
+
+model = ByolTrainer(AstroMorphologyModel(), representation_size=128)
+
+model.train_model(train_data=train_data, test_data=test_data, epochs=10)
+```
+
+
+
+### Training Script
+
+#### Basic configuration
 
 The settings of the training run are specified through a TOML file.
 An example of such a file can be found in `example_settings.toml`.
@@ -51,12 +95,12 @@ This file can be passed to the script with the `-c` or `--config-file` flag.
 The script should be invoked from the main folder of the repository:
 
 ```bash
-python astromorph/src/basic_training.py -c example_settings.toml
+python astromorph/src/pipeline_01_training.py -c example_settings.toml
 ```
 
-### Training
+#### Training
 
-#### Filelist
+##### Filelist
 
 Input can be specified as a filelist, which we specify with the `-d` flag.
 Such a filelist can be made using the `find` command line program.
@@ -67,7 +111,7 @@ We do this using the following commands:
 ```bash
 # Find the filenames and store them in data/inputfiles.txt
 $ find /full/path/to/datadirectory/ -type f -size -10M -name "**.fits" > data/inputfiles.txt
-$ python astromorph/src/basic_training.py -c training_settings.toml
+$ python astromorph/src/pipeline_01_training.py -c training_settings.toml
 ```
 
 In this example, `training_settings.toml` would look similar to
@@ -78,23 +122,23 @@ datafile = "data/inputfiles.txt"
 network_name = "n_layer_resnet"
 ```
 
-#### Masked data
+<!-- #### Masked data -->
+<!---->
+<!-- When extracting objects from a binary mask, the script expects the following input: -->
+<!---->
+<!-- - a single FITS file containing all the data -->
+<!-- - a FITS file of the same size with a binary mask, where all the object pixels are coded with a `1` -->
+<!---->
+<!-- Now the config file would have the added keyword `maskfile`: -->
+<!---->
+<!-- ```toml -->
+<!-- # Configfile for using masked data in two FITS files -->
+<!-- datafile = "data/data_file.fits" -->
+<!-- maskfile = "data/masked_file.fits" -->
+<!-- network_name = "n_layer_resnet" -->
+<!-- ``` -->
 
-When extracting objects from a binary mask, the script expects the following input:
-
-- a single FITS file containing all the data
-- a FITS file of the same size with a binary mask, where all the object pixels are coded with a `1`
-
-Now the config file would have the added keyword `maskfile`:
-
-```toml
-# Configfile for using masked data in two FITS files
-datafile = "data/data_file.fits"
-maskfile = "data/masked_file.fits"
-network_name = "n_layer_resnet"
-```
-
-#### Epochs
+##### Epochs
 
 Optionally, the number of training epochs can be specified with the `epochs` keyword, with a default of 10.
 
@@ -105,7 +149,7 @@ epochs = 5
 network_name = "n_layer_resnet"
 ```
 
-#### Reduced ResNet18 network
+##### Reduced ResNet18 network
 
 It is possible to use only a few of the convolutional layers of the ResNet18 network.
 There are four convolutional layers in ResNet18, named `layer1`, `layer2`,
@@ -127,7 +171,26 @@ network_name = "n_layer_resnet"
 last_layer = "layer2"
 ```
 
-### Inference
+##### Other settings
+
+Other settings that can be set in a config file are the following:
+```toml
+# Limit the number of cores used in the training process
+core_limit = 4
+
+# If the network expects 3-channel RGB images, but you have single-channel images
+[data_settings]
+stacksize = 3
+
+# Specify dimensions for the BYOL components
+[byol_settings]
+representation_size = 128
+projection_size = 16
+projection_hidden_size = 512
+use_momentum = true # Target network is exponential MA of online network.
+```
+
+#### Inference
 
 To run a trained network on some data, we will have to specify the location of the trained neural network.
 We do this with the `trained_network_name` keyword in the config file.
@@ -139,6 +202,8 @@ epochs = 5
 network_name = "n_layer_resnet"
 trained_network_name = "saved_models/newly_trained_network.pt"
 
+export_to_csv = true # Export embeddings and metadata to a CSV file
+
 [network_settings]
 last_layer = "layer2"
 ```
@@ -148,14 +213,14 @@ The non-relevant options (e.g. `epochs`) will be ignored, so you can reuse the c
 Alternatively, you can specify the relevant options using the command line, as shown here:
 
 ```bash
-python astromorph/src/inference.py -d <data-file> -m <mask-file> -n <trained-network-file>
+python astromorph/src/pipeline_02_inference.py -d <data-file> -m <mask-file> -n <trained-network-file>
 ```
 
 It is even possible to use a combination of config file and command line options.
 The options given in the command line will overrule the settings specified in the config file.
 
 ```bash
-python astromorph/src/inference.py -c example_settings.toml -n saved_models/newly_trained_network.pt
+python astromorph/src/pipeline_02_inference.py -c example_settings.toml -n saved_models/newly_trained_network.pt
 ```
 
 ### Visualisation
