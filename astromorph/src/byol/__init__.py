@@ -1,2 +1,2 @@
 from .byol import BYOL
-from .learner import ByolTrainer
+from .byol_trainer import ByolTrainer
