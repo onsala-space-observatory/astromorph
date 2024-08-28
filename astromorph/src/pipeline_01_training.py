@@ -44,10 +44,11 @@ def main(full_dataset: Dataset, settings: TrainingSettings):
         T.RandomHorizontalFlip(),
         T.RandomRotation(degrees=(0, 360)),
         T.RandomApply(T.GaussianBlur((3, 3), (1.0, 2.0)), p=0.2),
-        T.Normalize(
-            mean=torch.tensor([0.485, 0.456, 0.406]),
-            std=torch.tensor([0.229, 0.224, 0.225]),
-        ),
+    )
+
+    normalization_function = T.Normalize(
+        mean=torch.tensor([0.485,]), # 0.456, 0.406]),
+        std=torch.tensor([0.229,]), #0.224, 0.225]),
     )
 
     lr_scheduler = ExponentialLR if settings.exponential_lr is True else None
@@ -60,7 +61,8 @@ def main(full_dataset: Dataset, settings: TrainingSettings):
         device=device,
         lr_scheduler=lr_scheduler,
         lr_scheduler_options={"gamma": settings.gamma},
-        learning_rate=settings.learning_rate
+        learning_rate=settings.learning_rate,
+        normalization_function=normalization_function,
     )
 
     # Do train/test-split, and put into DataLoaders

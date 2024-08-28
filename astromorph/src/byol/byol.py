@@ -47,6 +47,7 @@ class BYOL(nn.Module):
         representation_size: int,
         hidden_layer: int = -2,
         augmentation_function: Optional[Callable] = None,
+        normalization_function: Optional[Callable] = None,
         use_momentum: bool = True,
         projection_size: int = 256,
         projection_hidden_size: int = 1024,
@@ -69,6 +70,8 @@ class BYOL(nn.Module):
             if augmentation_function is not None
             else DEFAULT_AUGMENTATION_FUNCTION
         )
+        self.normalization_function = normalization_function
+
         self.hidden_layer = hidden_layer
 
         self.online_encoder = NetWrapper(
@@ -98,10 +101,15 @@ class BYOL(nn.Module):
     ):
 
         if not return_errors:
+            if self.normalization_function is not None:
+                x = self.normalization_function(x)
             return self.online_encoder(x, return_projection=False)
 
         # augment_function is stochastic --> image_1 != image_2
         image_1, image_2 = self.augmentation_function(x), self.augmentation_function(x)
+        if self.normalization_function is not None:
+            image_1 = self.normalization_function(image_1)
+            image_2 = self.normalization_function(image_2)
 
         online_projection, online_embedding = self.online_encoder(image_1)
         online_prediction = self.online_predictor(online_projection)
