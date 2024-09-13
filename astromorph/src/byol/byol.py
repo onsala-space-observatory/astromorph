@@ -46,7 +46,7 @@ class BYOL(nn.Module):
         network: nn.Module,
         representation_size: int,
         hidden_layer: int = -2,
-        augment_function: Optional[Callable] = None,
+        augmentation_function: Optional[Callable] = None,
         use_momentum: bool = True,
         projection_size: int = 256,
         projection_hidden_size: int = 1024,
@@ -58,16 +58,16 @@ class BYOL(nn.Module):
         super().__init__()
 
         # Set a default augmentation function
-        DEFAULT_AUGMENT_FUNCTION = nn.Sequential(
+        DEFAULT_AUGMENTATION_FUNCTION = nn.Sequential(
             transforms.RandomGrayscale(p=0.2),
             transforms.RandomHorizontalFlip(),
             transforms.RandomRotation(degrees=(0, 360)),
         )
         # Override default augmentation function if given
-        self.augment_function = (
-            augment_function
-            if augment_function is not None
-            else DEFAULT_AUGMENT_FUNCTION
+        self.augmentation_function = (
+            augmentation_function
+            if augmentation_function is not None
+            else DEFAULT_AUGMENTATION_FUNCTION
         )
         self.hidden_layer = hidden_layer
 
@@ -101,7 +101,7 @@ class BYOL(nn.Module):
             return self.online_encoder(x, return_projection=False)
 
         # augment_function is stochastic --> image_1 != image_2
-        image_1, image_2 = self.augment_function(x), self.augment_function(x)
+        image_1, image_2 = self.augmentation_function(x), self.augmentation_function(x)
 
         online_projection, online_embedding = self.online_encoder(image_1)
         online_prediction = self.online_predictor(online_projection)
