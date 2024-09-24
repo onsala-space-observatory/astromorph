@@ -10,7 +10,7 @@ from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms as T
 
-from byol import ByolTrainer
+from byol import ByolTrainer, MinMaxNorm
 from datasets import FilelistDataset
 from models import DEFAULT_MODELS
 from settings import TrainingSettings
@@ -46,10 +46,7 @@ def main(full_dataset: Dataset, settings: TrainingSettings):
         T.RandomApply(T.GaussianBlur((3, 3), (1.0, 2.0)), p=0.2),
     )
 
-    normalization_function = T.Normalize(
-        mean=torch.tensor([0.485,]), # 0.456, 0.406]),
-        std=torch.tensor([0.229,]), #0.224, 0.225]),
-    )
+    normalization_function = MinMaxNorm()
 
     lr_scheduler = ExponentialLR if settings.exponential_lr is True else None
 
