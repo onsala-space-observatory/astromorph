@@ -30,6 +30,7 @@ class ByolTrainer(nn.Module):
         representation_size: int = 128,
         augmentation_function: Optional[Callable] = None,
         optimizer: Optional[Callable] = None,
+        normalization_function: Optional[Callable] = None,
         learning_rate: float = 5.0e-6,
         lr_scheduler: Optional[Type[LRScheduler]] = None,
         lr_scheduler_options: dict[str, Any] = {},
@@ -55,10 +56,13 @@ class ByolTrainer(nn.Module):
             else self.DEFAULT_AUGMENTATION_FUNCTION
         )
 
+        self.normalization_function = normalization_function
+
         self.byol = BYOL(
             network=network,
             hidden_layer=hidden_layer,
             augmentation_function=self.augmentation_function,
+            normalization_function=self.normalization_function,
             representation_size=representation_size,
             **kwargs
         )
