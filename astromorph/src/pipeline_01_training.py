@@ -2,10 +2,10 @@ import argparse
 import datetime as dt
 import os
 import pprint
-
-from loguru import logger
 import tomllib
+
 import torch
+from loguru import logger
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms as T
@@ -23,7 +23,10 @@ def main(full_dataset: Dataset, settings: TrainingSettings):
     # Timestamp to identify training runs
     start_time = dt.datetime.now().strftime("%Y%m%d_%H%M")
     logger.add(f"logs/{start_time}.log")
-    logger.info("Starting training run with settings:\n{}", pprint.pformat(settings.model_dump()))
+    logger.info(
+        "Starting training run with settings:\n{}",
+        pprint.pformat(settings.model_dump()),
+    )
 
     # Use a GPU if available
     # For now, we default to CPU learning, because the GPU memory overhead
@@ -51,7 +54,7 @@ def main(full_dataset: Dataset, settings: TrainingSettings):
     lr_scheduler = ExponentialLR if settings.exponential_lr is True else None
 
     learner = ByolTrainer(
-        network = network,
+        network=network,
         hidden_layer="avgpool",
         augmentation_function=augmentation_function,
         **(settings.byol_settings),
@@ -89,7 +92,7 @@ def main(full_dataset: Dataset, settings: TrainingSettings):
         epochs=epochs,
         log_dir=f"runs/{start_time}/",
         save_file=model_file_name,
-        batch_size=settings.batch_size
+        batch_size=settings.batch_size,
     )
 
 
