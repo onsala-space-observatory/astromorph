@@ -42,11 +42,11 @@ def main(full_dataset: Dataset, settings: TrainingSettings):
     network = DEFAULT_MODELS[network_name](**network_settings).to(device)
 
     augmentation_function = torch.nn.Sequential(
-        T.RandomApply(T.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.3),
+        T.RandomApply([T.ColorJitter(0.8, 0.8, 0.8, 0.2)], p=0.3),
         T.RandomGrayscale(p=0.2),
         T.RandomHorizontalFlip(),
         T.RandomRotation(degrees=(0, 360)),
-        T.RandomApply(T.GaussianBlur((3, 3), (1.0, 2.0)), p=0.2),
+        T.RandomApply([T.GaussianBlur((3, 3), (1.0, 2.0))], p=0.2),
     )
 
     normalization_function = MinMaxNorm()
