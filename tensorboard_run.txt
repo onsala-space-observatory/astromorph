@@ -1,0 +1,9 @@
+docker run \
+    -d \
+    -v ~/mlai/projects/morphology/astromorph/runs:/app/runs/:ro \
+    -p 6006:6006 \
+    --restart always \
+    -w "/app/" \
+    --name "tensorboard" \
+    schafo/tensorboard
+

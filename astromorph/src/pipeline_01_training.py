@@ -2,15 +2,15 @@ import argparse
 import datetime as dt
 import os
 import pprint
-
-from loguru import logger
 import tomllib
+
 import torch
+from loguru import logger
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms as T
 
-from byol import ByolTrainer
+from byol import ByolTrainer, MinMaxNorm
 from datasets import FilelistDataset
 from models import DEFAULT_MODELS
 from settings import TrainingSettings
@@ -23,7 +23,10 @@ def main(full_dataset: Dataset, settings: TrainingSettings):
     # Timestamp to identify training runs
     start_time = dt.datetime.now().strftime("%Y%m%d_%H%M")
     logger.add(f"logs/{start_time}.log")
-    logger.info("Starting training run with settings:\n{}", pprint.pformat(settings.model_dump()))
+    logger.info(
+        "Starting training run with settings:\n{}",
+        pprint.pformat(settings.model_dump()),
+    )
 
     # Use a GPU if available
     # For now, we default to CPU learning, because the GPU memory overhead
@@ -39,28 +42,27 @@ def main(full_dataset: Dataset, settings: TrainingSettings):
     network = DEFAULT_MODELS[network_name](**network_settings).to(device)
 
     augmentation_function = torch.nn.Sequential(
-        T.RandomApply(T.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.3),
+        T.RandomApply([T.ColorJitter(0.8, 0.8, 0.8, 0.2)], p=0.3),
         T.RandomGrayscale(p=0.2),
         T.RandomHorizontalFlip(),
         T.RandomRotation(degrees=(0, 360)),
-        T.RandomApply(T.GaussianBlur((3, 3), (1.0, 2.0)), p=0.2),
-        T.Normalize(
-            mean=torch.tensor([0.485, 0.456, 0.406]),
-            std=torch.tensor([0.229, 0.224, 0.225]),
-        ),
+        T.RandomApply([T.GaussianBlur((3, 3), (1.0, 2.0))], p=0.2),
     )
+
+    normalization_function = MinMaxNorm()
 
     lr_scheduler = ExponentialLR if settings.exponential_lr is True else None
 
     learner = ByolTrainer(
-        network = network,
+        network=network,
         hidden_layer="avgpool",
         augmentation_function=augmentation_function,
         **(settings.byol_settings),
         device=device,
         lr_scheduler=lr_scheduler,
         lr_scheduler_options={"gamma": settings.gamma},
-        learning_rate=settings.learning_rate
+        learning_rate=settings.learning_rate,
+        normalization_function=normalization_function,
     )
 
     # Do train/test-split, and put into DataLoaders
@@ -90,7 +92,7 @@ def main(full_dataset: Dataset, settings: TrainingSettings):
         epochs=epochs,
         log_dir=f"runs/{start_time}/",
         save_file=model_file_name,
-        batch_size=settings.batch_size
+        batch_size=settings.batch_size,
     )
 
 
