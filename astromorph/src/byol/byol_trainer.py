@@ -116,7 +116,8 @@ class ByolTrainer(nn.Module):
             loss = self.byol(image, return_errors=True)
 
             batch_loss = batch_loss + loss if batch_loss else loss
-            total_loss += loss.sum()
+            # Make sure to detach the total loss, to prevent OOM errors
+            total_loss += loss.sum().detach()
 
             if i % batch_size == 0 and i > 0:
                 batch_loss.backward()
