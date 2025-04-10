@@ -4,7 +4,7 @@
     "applicationCategory": "Astronomy",
     "author": [
         {
-            "id": "_:author_1",
+            "id": "https://orcid.org/0000-0002-1060-1665",
             "type": "Person",
             "affiliation": {
                 "type": "Organization",
