@@ -37,7 +37,7 @@
             "givenName": "Per"
         }
                 {
-            "id": "_:author_4",
+            "id": "https://orcid.org/0000-0001-7764-3109",
             "type": "Person",
             "affiliation": {
                 "type": "Organization",
