@@ -26,7 +26,7 @@
             "givenName": "Otoniel"
         }
         {
-            "id": "_:author_3",
+            "id": "http://orcid.org/0000-0002-7993-4118",
             "type": "Person",
             "affiliation": {
                 "type": "Organization",
