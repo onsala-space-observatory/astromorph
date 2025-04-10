@@ -15,7 +15,7 @@
             "givenName": "Leon"
         }
         {
-            "id": "_:author_2",
+            "id": "https://orcid.org/0000-0003-1931-0554",
             "type": "Person",
             "affiliation": {
                 "type": "Organization",
