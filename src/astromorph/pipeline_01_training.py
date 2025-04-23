@@ -10,10 +10,10 @@ from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms as T
 
-from byol import ByolTrainer, MinMaxNorm
-from datasets import FilelistDataset
-from models import DEFAULT_MODELS
-from settings import TrainingSettings
+from .byol import ByolTrainer, MinMaxNorm
+from .datasets import FilelistDataset
+from .models import DEFAULT_MODELS
+from .settings import TrainingSettings
 
 
 def main(full_dataset: Dataset, settings: TrainingSettings):

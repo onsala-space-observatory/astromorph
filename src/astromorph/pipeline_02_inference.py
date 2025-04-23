@@ -15,10 +15,10 @@ from skimage.transform import resize
 from sklearn import cluster
 
 # Provide these to the namespace for the read models
-from byol import ByolTrainer, MinMaxNorm
-from datasets import FilelistDataset
-from models import NLayerResnet
-from settings import InferenceSettings
+from .byol import ByolTrainer, MinMaxNorm
+from .datasets import FilelistDataset
+from .models import NLayerResnet
+from .settings import InferenceSettings
 
 
 def pad_image_to_square(image: torch.Tensor):
