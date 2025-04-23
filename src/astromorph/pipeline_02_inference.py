@@ -8,7 +8,7 @@ import pandas as pd
 from torchvision import models
 import torch
 from torch.nn.functional import pad
-from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard.writer import SummaryWriter
 from tqdm import tqdm
 import numpy as np
 from skimage.transform import resize
