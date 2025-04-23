@@ -65,9 +65,9 @@ def normalize_image(image: torch.Tensor):
 def create_thumbnail(image: torch.Tensor, thumbnail_size: int):
     # make sure the image is square
     # only use the unaugmented image
-    image = pad_image_to_square(image[0])
-    image = resize(np.array(image), (3, thumbnail_size, thumbnail_size))
-    image = torch.from_numpy(image)[None]
+    square_numpy_image = pad_image_to_square(image[0]).numpy()
+    square_numpy_image = resize(square_numpy_image, (3, thumbnail_size, thumbnail_size))
+    image = torch.from_numpy(square_numpy_image)[None]
     image = torch.flip(image, [1, 2])
     return image
 
