@@ -2,7 +2,14 @@ from typing import Union
 
 import torch
 
-from astropy.io import fits
+try:
+    from astropy.io import fits
+except ImportError:
+    print(
+        "Please install `astromorph[fits]` if you want to use the command line "
+        "functionality or the FitsFilelistDataset class."
+    )
+    raise SystemExit
 
 from .helpers import augment_image, make_4D
 from .base_dataset import BaseDataset

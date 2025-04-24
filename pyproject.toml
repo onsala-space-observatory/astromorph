@@ -12,7 +12,6 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-  "astropy>=6.0.1",
   "loguru>=0.7.2",
   "numpy>=1.26.4",
   "pandas>=2.2.2",
@@ -25,6 +24,7 @@ dependencies = [
   "torchvision>=0.18.0",
   "tqdm>=4.66.2",
 ]
+optional-dependencies = { fits = ["astropy>=6.0.1"] }
 
 [build-system]
 requires = ["hatchling"]
