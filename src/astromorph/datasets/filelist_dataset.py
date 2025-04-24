@@ -11,8 +11,8 @@ except ImportError:
     )
     raise SystemExit
 
-from .helpers import augment_image, make_4D
 from .base_dataset import BaseDataset
+from .helpers import augment_image, make_4D
 
 
 class FitsFilelistDataset(BaseDataset):
@@ -47,7 +47,7 @@ class FitsFilelistDataset(BaseDataset):
     def __getitem__(self, index: int):
         """Retrieve the item at index.
 
-        This will first open the FITS file, and retrieve multiple versions 
+        This will first open the FITS file, and retrieve multiple versions
         of the image:
             - original
             - rotated 180 degrees
@@ -71,7 +71,7 @@ class FitsFilelistDataset(BaseDataset):
         """Read FITS file data into a pytorch Tensor.
 
         Data straight out of a FITS file cannot be read into a pytorch tensor.
-        This function will do some datatype manipulation to produce a tensor 
+        This function will do some datatype manipulation to produce a tensor
         that can go straight into a neural network.
 
         Args:
@@ -90,7 +90,10 @@ class FitsFilelistDataset(BaseDataset):
         Returns:
             list of 4D torch Tensors that can be used for inference
         """
-        return [make_4D(self.read_fits_data(filename), stacksize=self.stacksize) for filename in self.filenames]
+        return [
+            make_4D(self.read_fits_data(filename), stacksize=self.stacksize)
+            for filename in self.filenames
+        ]
 
     def get_object_property(self, keyword: str):
         """Retrieve an object property from the FITS header
