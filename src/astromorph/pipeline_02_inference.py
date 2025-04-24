@@ -16,7 +16,7 @@ from sklearn import cluster
 
 # Provide these to the namespace for the read models
 from astromorph.byol import ByolTrainer, MinMaxNorm
-from astromorph.datasets import FilelistDataset
+from astromorph.datasets import FitsFilelistDataset
 from astromorph.models import NLayerResnet
 from astromorph.settings import InferenceSettings
 
@@ -73,7 +73,7 @@ def create_thumbnail(image: torch.Tensor, thumbnail_size: int):
 
 
 def main(
-    dataset: FilelistDataset,
+    dataset: FitsFilelistDataset,
     model_name: str,
     export_embeddings: bool = False,
 ):
@@ -130,7 +130,7 @@ def main(
     writer = SummaryWriter(log_dir=f"runs/{model_basename}/")
 
     # If the data is stored in FITS files, retrieve extra metadata
-    if isinstance(dataset, FilelistDataset):
+    if isinstance(dataset, FitsFilelistDataset):
         # Retrieve object name, RA, dec, rest frequency, and the filename
         names = dataset.get_object_property("OBJECT")
         right_ascension = dataset.get_object_property("OBSRA")
@@ -211,6 +211,6 @@ if __name__ == "__main__":
     settings = InferenceSettings(**config_dict)
 
     logger.info("Reading data")
-    dataset = FilelistDataset(settings.datafile, **(settings.data_settings))
+    dataset = FitsFilelistDataset(settings.datafile, **(settings.data_settings))
 
     main(dataset, settings.trained_network_name, settings.export_to_csv)

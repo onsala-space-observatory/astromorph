@@ -8,11 +8,11 @@ from .helpers import augment_image, make_4D
 from .base_dataset import BaseDataset
 
 
-class FilelistDataset(BaseDataset):
+class FitsFilelistDataset(BaseDataset):
     """A class to gather multiple FITS images in a Dataset."""
 
     def __init__(self, filelist: Union[str, list], *args, **kwargs):
-        """Create a FilelistDataset.
+        """Create a FitsFilelistDataset.
 
         This will only store the filenames in memory.
         Files will be opened and loaded on an as-needed basis.

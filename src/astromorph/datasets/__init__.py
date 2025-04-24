@@ -1,1 +1,1 @@
-from .filelist_dataset import FilelistDataset
+from .filelist_dataset import FitsFilelistDataset

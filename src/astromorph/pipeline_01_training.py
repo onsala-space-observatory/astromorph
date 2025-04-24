@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms as T
 
 from astromorph.byol import ByolTrainer, MinMaxNorm
-from astromorph.datasets import FilelistDataset
+from astromorph.datasets import FitsFilelistDataset
 from astromorph.models import DEFAULT_MODELS
 from astromorph.settings import TrainingSettings
 
@@ -112,6 +112,6 @@ if __name__ == "__main__":
     if settings.core_limit:
         torch.set_num_threads(settings.core_limit)
 
-    dataset = FilelistDataset(settings.datafile, **(settings.data_settings))
+    dataset = FitsFilelistDataset(settings.datafile, **(settings.data_settings))
 
     main(dataset, settings=settings)
