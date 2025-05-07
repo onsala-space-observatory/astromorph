@@ -30,7 +30,7 @@
             "type": "Person",
             "affiliation": {
                 "type": "Organization",
-                "name": "Department of Space, Earth and Environment, Chalmers University of Technology, SE-412 96, Sweden"
+                "name": "Department of Space, Earth and Environment, Chalmers University of Technology, 412 96 Gothenburg, Sweden"
             },
             "email": "per.bjerkeli@chalmers.se",
             "familyName": "Bjerkeli",
@@ -41,7 +41,7 @@
             "type": "Person",
             "affiliation": {
                 "type": "Organization",
-                "name": "Department of Space, Earth and Environment, Chalmers University of Technology, SE-412 96, Sweden"
+                "name": "Department of Space, Earth and Environment, Chalmers University of Technology, 412 96 Gothenburg, Sweden"
             },
             "email": "jouni.kainulainen@chalmers.se",
             "familyName": "Kainulainen",
@@ -51,8 +51,7 @@
             "type": "Person",
             "affiliation": {
                 "type": "Organization",
-                "name": "Department of Space, Earth and Environment, Chalmers University of Technology, Onsala Space Observatory, 439
-92 Onsala, Sweden"
+                "name": "Department of Space, Earth and Environment, Chalmers University of Technology, Onsala Space Observatory, 439 92 Onsala, Sweden"
             },
             "email": "toribio@chalmers.se",
             "familyName": "Toribio",
@@ -69,8 +68,8 @@
     }
     "codeRepository": "https://github.com/onsala-space-observatory/astromorph",
     "dateCreated": "2024-03-07",
-    "dateModified": "2025-04-11",
-    "datePublished": "2025-04-11",
+    "dateModified": "2025-05-07",
+    "datePublished": "2025-05-07",
     "description": "Self-supervised machine learning pipeline for astronomical morphology analysis",
     "downloadUrl": "https://github.com/onsala-space-observatory/astromorph",
     "funder": {
