@@ -70,7 +70,7 @@
     "dateCreated": "2024-03-07",
     "dateModified": "2025-05-07",
     "datePublished": "2025-05-07",
-    "description": "astromorph performs an automatic classification of astronomical objects based on their morphology using machine learning in a self-supervised manner. The pipeline is an implementation for astronomical images in FITS-format files of the Boot-strap Your Own Latents (BYOL; Gill et al. 202) method, which does not require labelling of the training data.",
+    "description": "astromorph performs an automatic classification of astronomical objects based on their morphology using machine learning in a self-supervised manner. Written in Python, the pipeline is an implementation for astronomical images in FITS-format files of the Boot-strap Your Own Latents (BYOL; Gill et al. 202) method, which does not require labelling of the training data.",
     "downloadUrl": "https://github.com/onsala-space-observatory/astromorph",
     "funder": {
         "type": "Organization",
