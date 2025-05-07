@@ -13,7 +13,7 @@
             "email": "leon.boschman@chalmers.se",
             "familyName": "Boschman",
             "givenName": "Leon"
-        }
+        },
         {
             "id": "https://orcid.org/0000-0003-1931-0554",
             "type": "Person",
@@ -24,7 +24,7 @@
             "email": "otoniel.maya@chalmers.se",
             "familyName": "Maya Lucas",
             "givenName": "Otoniel"
-        }
+        },
         {
             "id": "https://orcid.org/0000-0002-7993-4118",
             "type": "Person",
@@ -35,8 +35,8 @@
             "email": "per.bjerkeli@chalmers.se",
             "familyName": "Bjerkeli",
             "givenName": "Per"
-        }
-                {
+        },
+        {
             "id": "https://orcid.org/0000-0001-7764-3109",
             "type": "Person",
             "affiliation": {
@@ -46,7 +46,8 @@
             "email": "jouni.kainulainen@chalmers.se",
             "familyName": "Kainulainen",
             "givenName": "Jouni"
-        }        {
+        },        
+        {
             "id": "https://orcid.org/0000-0001-8063-2881",
             "type": "Person",
             "affiliation": {
@@ -65,7 +66,7 @@
         "email": "toribio@chalmers.se",
         "givenName": "M. Carmen",
         "familyName": "Toribio"
-    }
+    },
     "codeRepository": "https://github.com/onsala-space-observatory/astromorph",
     "dateCreated": "2024-03-07",
     "dateModified": "2025-05-07",
