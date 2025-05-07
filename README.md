@@ -1,6 +1,6 @@
 # AstroMorph
 
-The AstroMorph project is an ML project to automatically separate a collection of astronomical objects based on their morphology.
+The AstroMorph project is an ML project to automatically separate a collection of astronomical objects based on their morphology. The method and science demonstration can be found in Boschman et al. (in preparation). If you use AstroMorph in your research, please consider citing our paper. 
 
 ## Installation
 
