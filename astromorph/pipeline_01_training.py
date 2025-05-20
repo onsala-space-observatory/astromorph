@@ -1,8 +1,6 @@
-import argparse
 import datetime as dt
 import os
 import pprint
-import tomllib
 
 import torch
 from loguru import logger
@@ -11,7 +9,6 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms as T
 
 from astromorph.byol import ByolTrainer, MinMaxNorm
-from astromorph.datasets import FitsFilelistDataset
 from astromorph.models import DEFAULT_MODELS
 from astromorph.settings import TrainingSettings
 
@@ -94,24 +91,3 @@ def main(full_dataset: Dataset, settings: TrainingSettings):
         save_file=model_file_name,
         batch_size=settings.batch_size,
     )
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        prog="Astromorph pipeline", description=None, epilog=None
-    )
-
-    parser.add_argument(
-        "-c", "--configfile", help="Specify a configfile", required=True
-    )
-
-    with open(parser.parse_args().configfile, "rb") as file:
-        config_dict = tomllib.load(file)
-    settings = TrainingSettings(**config_dict)
-
-    if settings.core_limit:
-        torch.set_num_threads(settings.core_limit)
-
-    dataset = FitsFilelistDataset(settings.datafile, **(settings.data_settings))
-
-    main(dataset, settings=settings)

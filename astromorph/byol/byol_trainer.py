@@ -1,7 +1,7 @@
-from typing import Any, Callable, Optional, Type
+from typing import Any, Callable, Optional, Type, Union
 
-from loguru import logger
 import torch
+from loguru import logger
 from torch import nn
 from torch.optim import Adam
 from torch.optim.lr_scheduler import LRScheduler
@@ -26,7 +26,7 @@ class ByolTrainer(nn.Module):
     def __init__(
         self,
         network: nn.Module,
-        hidden_layer: str = "avgpool",
+        hidden_layer: Union[int, str] = "avgpool",
         representation_size: int = 128,
         augmentation_function: Optional[Callable] = None,
         optimizer: Optional[Callable] = None,
@@ -41,7 +41,7 @@ class ByolTrainer(nn.Module):
 
         Args:
             network: core CNN around which the BYOL framework is built
-            hidden_layer: the layer of the CNN to intercept
+            hidden_layer: the layer of the CNN to intercept (can be int index or str name)
             representation_size: the size of the embedding vectors
             augmentation_function: stochastic augmentation function
             optimizer: optimizer to use for the training process
@@ -64,7 +64,7 @@ class ByolTrainer(nn.Module):
             augmentation_function=self.augmentation_function,
             normalization_function=self.normalization_function,
             representation_size=representation_size,
-            **kwargs
+            **kwargs,
         )
 
         optimizer = self.DEFAULT_OPTIMIZER if optimizer is None else optimizer
@@ -74,7 +74,6 @@ class ByolTrainer(nn.Module):
             self.lr_scheduler = lr_scheduler(self.optimizer, **lr_scheduler_options)
         else:
             self.lr_scheduler = None
-
 
         self.to_device(device)
         self._batch_index = 0
@@ -178,9 +177,11 @@ class ByolTrainer(nn.Module):
             **kwargs:
         """
         writer = SummaryWriter(log_dir=log_dir)
-        for epoch in range(1, epochs+1):
+        for epoch in range(1, epochs + 1):
             if self.lr_scheduler is not None:
-                logger.info(f"[Epoch {epoch}] Learning rate: {self.lr_scheduler.get_last_lr()[0]:.3e}")
+                logger.info(
+                    f"[Epoch {epoch}] Learning rate: {self.lr_scheduler.get_last_lr()[0]:.3e}"
+                )
             train_loss = self.train_epoch(train_data, summary_writer=writer, **kwargs)
             writer.add_scalar(
                 "Train loss", train_loss / len(train_data), epoch, new_style=True

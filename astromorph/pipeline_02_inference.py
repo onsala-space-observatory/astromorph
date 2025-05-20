@@ -1,18 +1,13 @@
-import argparse
 import os
-import tomllib
-from typing import Union
 
-from loguru import logger
 import pandas as pd
-from torchvision import models
 import torch
+from loguru import logger
+from skimage.transform import resize
+from sklearn import cluster
 from torch.nn.functional import pad
 from torch.utils.tensorboard.writer import SummaryWriter
 from tqdm import tqdm
-import numpy as np
-from skimage.transform import resize
-from sklearn import cluster
 
 # Provide these to the namespace for the read models
 from astromorph.byol import ByolTrainer, MinMaxNorm
@@ -103,11 +98,11 @@ def main(
 
     logger.info("Calculating embeddings...")
     with torch.no_grad():
-        dummy_embeddings = learner(images[0]) #, return_embedding=True)
+        dummy_embeddings = learner(images[0])  # , return_embedding=True)
         embeddings_dim = dummy_embeddings.shape[1]
         embeddings = torch.empty((0, embeddings_dim)).to(device)
         for image in tqdm(images):
-            emb = learner(image) #, return_embedding=True)
+            emb = learner(image)  # , return_embedding=True)
             embeddings = torch.cat((embeddings, emb), dim=0)
 
     logger.info("Clustering embeddings...")
@@ -179,38 +174,3 @@ def main(
         df_metadata = pd.DataFrame(columns=headers, data=labels)
         df_export = pd.concat([df_metadata, df_embeddings], axis=1)
         df_export.to_csv(f"exported/{model_basename}.csv", sep=";")
-
-
-if __name__ == "__main__":
-    # Options can either be provided by command line arguments, or a config file
-    # Options from the command line will override those from the config file
-    parser = argparse.ArgumentParser(
-        prog="Astromorph pipeline", description=None, epilog=None
-    )
-    parser.add_argument("-d", "--datafile", help="Define a data file")
-    parser.add_argument("-m", "--maskfile", help="Specify a mask file")
-    parser.add_argument("-n", "--trained_network_name", help="Saved network model")
-    parser.add_argument("-c", "--configfile", help="Specify a config file")
-    args = parser.parse_args()
-
-    # If there is a config file, load those settings first
-    # Otherwise, only use settings from the command line
-    if args.configfile:
-        overriding_settings = vars(args)
-        configfile = overriding_settings.pop("configfile")
-        with open(configfile, "rb") as file:
-            config_dict = tomllib.load(file)
-        # Overwrite the config file settings with command line settings
-        for key, value in overriding_settings.items():
-            if value is not None:
-                config_dict.update({key: value})
-    else:
-        config_dict = vars(args)
-
-    # Use InferenceSettings to validate settings
-    settings = InferenceSettings(**config_dict)
-
-    logger.info("Reading data")
-    dataset = FitsFilelistDataset(settings.datafile, **(settings.data_settings))
-
-    main(dataset, settings.trained_network_name, settings.export_to_csv)
