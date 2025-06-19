@@ -2,7 +2,7 @@
 
 The AstroMorph project is an ML project to automatically separate a collection of astronomical objects based on their morphology. The method and science demonstration are detailed in Boschman et al. (in preparation). If you use AstroMorph in your research, please consider citing our paper:
 
-**```astromorph```: self-supervised machine learning pipeline for astronomical morphology analysis**
+**```astromorph```: self-supervised machine learning pipeline for astronomical morphology analysis**<br>
 L. Boschman, O. Maya Lucas, P. Bjerkeli, J. Kainulainen, and M. C. Toribio
 *(In preparation)*
 
