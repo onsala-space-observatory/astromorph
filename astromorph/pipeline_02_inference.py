@@ -1,24 +1,19 @@
-import argparse
 import os
-import tomllib
-from typing import Union
 
-from loguru import logger
 import pandas as pd
-from torchvision import models
 import torch
-from torch.nn.functional import pad
-from torch.utils.tensorboard import SummaryWriter
-from tqdm import tqdm
-import numpy as np
+from loguru import logger
 from skimage.transform import resize
 from sklearn import cluster
+from torch.nn.functional import pad
+from torch.utils.tensorboard.writer import SummaryWriter
+from tqdm import tqdm
 
 # Provide these to the namespace for the read models
-from byol import ByolTrainer, MinMaxNorm
-from datasets import FilelistDataset
-from models import NLayerResnet
-from settings import InferenceSettings
+from astromorph.byol import ByolTrainer, MinMaxNorm
+from astromorph.datasets import FitsFilelistDataset
+from astromorph.models import NLayerResnet
+from astromorph.settings import InferenceSettings
 
 
 def pad_image_to_square(image: torch.Tensor):
@@ -65,15 +60,15 @@ def normalize_image(image: torch.Tensor):
 def create_thumbnail(image: torch.Tensor, thumbnail_size: int):
     # make sure the image is square
     # only use the unaugmented image
-    image = pad_image_to_square(image[0])
-    image = resize(np.array(image), (3, thumbnail_size, thumbnail_size))
-    image = torch.from_numpy(image)[None]
+    square_numpy_image = pad_image_to_square(image[0]).numpy()
+    square_numpy_image = resize(square_numpy_image, (3, thumbnail_size, thumbnail_size))
+    image = torch.from_numpy(square_numpy_image)[None]
     image = torch.flip(image, [1, 2])
     return image
 
 
 def main(
-    dataset: FilelistDataset,
+    dataset: FitsFilelistDataset,
     model_name: str,
     export_embeddings: bool = False,
 ):
@@ -103,11 +98,11 @@ def main(
 
     logger.info("Calculating embeddings...")
     with torch.no_grad():
-        dummy_embeddings = learner(images[0]) #, return_embedding=True)
+        dummy_embeddings = learner(images[0])  # , return_embedding=True)
         embeddings_dim = dummy_embeddings.shape[1]
         embeddings = torch.empty((0, embeddings_dim)).to(device)
         for image in tqdm(images):
-            emb = learner(image) #, return_embedding=True)
+            emb = learner(image)  # , return_embedding=True)
             embeddings = torch.cat((embeddings, emb), dim=0)
 
     logger.info("Clustering embeddings...")
@@ -130,7 +125,7 @@ def main(
     writer = SummaryWriter(log_dir=f"runs/{model_basename}/")
 
     # If the data is stored in FITS files, retrieve extra metadata
-    if isinstance(dataset, FilelistDataset):
+    if isinstance(dataset, FitsFilelistDataset):
         # Retrieve object name, RA, dec, rest frequency, and the filename
         names = dataset.get_object_property("OBJECT")
         right_ascension = dataset.get_object_property("OBSRA")
@@ -179,38 +174,3 @@ def main(
         df_metadata = pd.DataFrame(columns=headers, data=labels)
         df_export = pd.concat([df_metadata, df_embeddings], axis=1)
         df_export.to_csv(f"exported/{model_basename}.csv", sep=";")
-
-
-if __name__ == "__main__":
-    # Options can either be provided by command line arguments, or a config file
-    # Options from the command line will override those from the config file
-    parser = argparse.ArgumentParser(
-        prog="Astromorph pipeline", description=None, epilog=None
-    )
-    parser.add_argument("-d", "--datafile", help="Define a data file")
-    parser.add_argument("-m", "--maskfile", help="Specify a mask file")
-    parser.add_argument("-n", "--trained_network_name", help="Saved network model")
-    parser.add_argument("-c", "--configfile", help="Specify a config file")
-    args = parser.parse_args()
-
-    # If there is a config file, load those settings first
-    # Otherwise, only use settings from the command line
-    if args.configfile:
-        overriding_settings = vars(args)
-        configfile = overriding_settings.pop("configfile")
-        with open(configfile, "rb") as file:
-            config_dict = tomllib.load(file)
-        # Overwrite the config file settings with command line settings
-        for key, value in overriding_settings.items():
-            if value is not None:
-                config_dict.update({key: value})
-    else:
-        config_dict = vars(args)
-
-    # Use InferenceSettings to validate settings
-    settings = InferenceSettings(**config_dict)
-
-    logger.info("Reading data")
-    dataset = FilelistDataset(settings.datafile, **(settings.data_settings))
-
-    main(dataset, settings.trained_network_name, settings.export_to_csv)

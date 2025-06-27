@@ -1,8 +1,8 @@
 from copy import deepcopy
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
-from loguru import logger
 import torch
+from loguru import logger
 from torch import nn
 from torch.nn.functional import normalize
 from torchvision import transforms
@@ -32,7 +32,7 @@ class BYOL(nn.Module):
 
     Attributes:
         augment_function: augmentation function to create different images
-        hidden_layer: which layer of the base neural network to intercept
+        hidden_layer: which layer of the base neural network to intercept (can be int index or str name)
         online_encoder: encoder for later inference
         online_predictor: MLP to convert a projection into prediction
         target_encoder: encoder to compare, usually EWMA of online encoder
@@ -45,7 +45,7 @@ class BYOL(nn.Module):
         self,
         network: nn.Module,
         representation_size: int,
-        hidden_layer: int = -2,
+        hidden_layer: Union[int, str] = -2,
         augmentation_function: Optional[Callable] = None,
         normalization_function: Optional[Callable] = None,
         use_momentum: bool = True,
@@ -54,7 +54,7 @@ class BYOL(nn.Module):
         loss_fn: Callable = cosine_loss,
         moving_average_decay: float = 0.99,
         *args,
-        **kwargs
+        **kwargs,
     ) -> None:
         super().__init__()
 

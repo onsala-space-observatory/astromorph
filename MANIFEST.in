@@ -1,0 +1,3 @@
+include LICENSE
+include codemeta.json
+include example_settings.toml

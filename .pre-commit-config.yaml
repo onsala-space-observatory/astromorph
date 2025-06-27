@@ -1,0 +1,38 @@
+---
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+      - id: mypy
+        args: [--strict, --ignore-missing-imports, --allow-untyped-decorators]
+        additional_dependencies:
+          - types-click
+          - types-toml
+          - types-PyYAML
+          - types-requests
+          - types-setuptools
+          - types-urllib3
+          - torch
+          - typer
+          - loguru
+          - pandas
+          - torchvision
+          - scikit-learn
+          - scikit-image
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.4
+    hooks:
+      - id: ruff
+        args: [--extend-select, I, --fix]
+      - id: ruff-format

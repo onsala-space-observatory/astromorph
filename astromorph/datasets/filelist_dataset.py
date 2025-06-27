@@ -2,17 +2,24 @@ from typing import Union
 
 import torch
 
-from astropy.io import fits
+try:
+    from astropy.io import fits
+except ImportError:
+    print(
+        "Please install `astromorph[fits]` if you want to use the command line "
+        "functionality or the FitsFilelistDataset class."
+    )
+    raise SystemExit
 
-from .helpers import augment_image, make_4D
 from .base_dataset import BaseDataset
+from .helpers import augment_image, make_4D
 
 
-class FilelistDataset(BaseDataset):
+class FitsFilelistDataset(BaseDataset):
     """A class to gather multiple FITS images in a Dataset."""
 
     def __init__(self, filelist: Union[str, list], *args, **kwargs):
-        """Create a FilelistDataset.
+        """Create a FitsFilelistDataset.
 
         This will only store the filenames in memory.
         Files will be opened and loaded on an as-needed basis.
@@ -40,7 +47,7 @@ class FilelistDataset(BaseDataset):
     def __getitem__(self, index: int):
         """Retrieve the item at index.
 
-        This will first open the FITS file, and retrieve multiple versions 
+        This will first open the FITS file, and retrieve multiple versions
         of the image:
             - original
             - rotated 180 degrees
@@ -64,7 +71,7 @@ class FilelistDataset(BaseDataset):
         """Read FITS file data into a pytorch Tensor.
 
         Data straight out of a FITS file cannot be read into a pytorch tensor.
-        This function will do some datatype manipulation to produce a tensor 
+        This function will do some datatype manipulation to produce a tensor
         that can go straight into a neural network.
 
         Args:
@@ -83,7 +90,10 @@ class FilelistDataset(BaseDataset):
         Returns:
             list of 4D torch Tensors that can be used for inference
         """
-        return [make_4D(self.read_fits_data(filename), stacksize=self.stacksize) for filename in self.filenames]
+        return [
+            make_4D(self.read_fits_data(filename), stacksize=self.stacksize)
+            for filename in self.filenames
+        ]
 
     def get_object_property(self, keyword: str):
         """Retrieve an object property from the FITS header

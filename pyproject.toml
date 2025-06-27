@@ -1,0 +1,24 @@
+[project]
+name = "astromorph"
+version = "0.1.0"
+description = "Astromorph tool"
+readme = "README.md"
+requires-python = ">=3.12.0, <3.13.0"
+dependencies = [
+    "astropy>=6.0.1",
+    "loguru>=0.7.2",
+    "numpy>=1.26.4",
+    "pandas>=2.2.2",
+    "pydantic>=2.7.1",
+    "scikit-image>=0.0",
+    "scikit-learn>=1.4.2",
+    "scipy>=1.13.0",
+    "tensorboard>=2.16.2",
+    "torch>=2.3.0",
+    "torchvision>=0.18.0",
+    "tqdm>=4.66.2",
+    "typer>=0.15.2",
+]
+
+[tool.setuptools]
+include-package-data = true
