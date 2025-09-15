@@ -16,7 +16,7 @@ from astromorph.models import NLayerResnet
 from astromorph.settings import InferenceSettings
 
 
-def pad_image_to_square(image: torch.Tensor):
+def pad_image_to_square(image: torch.Tensor) -> torch.Tensor:
     """Convert image to a square image.
 
     The image is padded with zeros where necessary
@@ -39,14 +39,14 @@ def pad_image_to_square(image: torch.Tensor):
         (0, 0),
     ]
 
-    pad_tuple = ()
+    pad_tuple: tuple[int, ...] = ()
     for padding in pad_widths:
         pad_tuple += padding
 
     return pad(image, pad_tuple, value=0)
 
 
-def normalize_image(image: torch.Tensor):
+def normalize_image(image: torch.Tensor) -> torch.Tensor:
     """Ensure that an image has pixel values between 0 and 1
 
     Args:
@@ -57,7 +57,7 @@ def normalize_image(image: torch.Tensor):
     return image
 
 
-def create_thumbnail(image: torch.Tensor, thumbnail_size: int):
+def create_thumbnail(image: torch.Tensor, thumbnail_size: int) -> torch.Tensor:
     # make sure the image is square
     # only use the unaugmented image
     square_numpy_image = pad_image_to_square(image[0]).numpy()
@@ -71,7 +71,7 @@ def main(
     dataset: FitsFilelistDataset,
     model_name: str,
     export_embeddings: bool = False,
-):
+) -> None:
     """Run the inference.
 
     Args:
@@ -82,7 +82,9 @@ def main(
     device = (
         "cuda"
         if torch.cuda.is_available()
-        else "mps" if torch.backends.mps.is_available() else "cpu"
+        else "mps"
+        if torch.backends.mps.is_available()
+        else "cpu"
     )
     logger.info("Using device {}", device)
 

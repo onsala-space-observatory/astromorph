@@ -2,7 +2,7 @@ import torch
 
 
 class MinMaxNorm(torch.nn.Module):
-    def forward(self, image: torch.Tensor):
+    def forward(self, image: torch.Tensor) -> torch.Tensor:
         image -= image.min()
         image /= image.max()
         return image

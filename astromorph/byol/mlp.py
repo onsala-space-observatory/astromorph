@@ -1,12 +1,13 @@
-from typing import Union, Type
+from typing import Type, Union
 
+import torch
 import torch.distributed as distributed
 from torch import nn
 
 
-def parrallel_or_single_batchnorm() -> (
-    Union[Type[nn.BatchNorm1d], Type[nn.SyncBatchNorm]]
-):
+def parrallel_or_single_batchnorm() -> Union[
+    Type[nn.BatchNorm1d], Type[nn.SyncBatchNorm]
+]:
     """Give a parallel or regular BatchNorm.
 
     Depending on the environment (parallellized training or not), you need
@@ -27,7 +28,10 @@ class MultiLayerPerceptron(nn.Module):
     Attributes:
         model: The actual perception
     """
-    def __init__(self, representation_size: int, hidden_size: int, projection_size: int) -> None:
+
+    def __init__(
+        self, representation_size: int, hidden_size: int, projection_size: int
+    ) -> None:
         """Init the MLP.
 
         Args:
@@ -36,12 +40,13 @@ class MultiLayerPerceptron(nn.Module):
             projection_size: size of output vector
         """
         super().__init__()
-        self.model = nn.Sequential(
+        self.model: nn.Sequential = nn.Sequential(
             nn.Linear(representation_size, hidden_size),
             parrallel_or_single_batchnorm()(hidden_size),
             nn.ReLU(inplace=True),
             nn.Linear(hidden_size, projection_size),
         )
 
-    def forward(self, x):
-        return self.model(x)
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        result: torch.Tensor = self.model(x)
+        return result

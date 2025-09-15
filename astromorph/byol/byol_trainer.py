@@ -14,7 +14,6 @@ from .byol import BYOL
 
 
 class ByolTrainer(nn.Module):
-
     DEFAULT_AUGMENTATION_FUNCTION = nn.Sequential(
         T.RandomHorizontalFlip(),
         T.RandomRotation(degrees=(0, 360)),
@@ -28,14 +27,14 @@ class ByolTrainer(nn.Module):
         network: nn.Module,
         hidden_layer: Union[int, str] = "avgpool",
         representation_size: int = 128,
-        augmentation_function: Optional[Callable] = None,
-        optimizer: Optional[Callable] = None,
-        normalization_function: Optional[Callable] = None,
+        augmentation_function: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
+        optimizer: Optional[Callable[..., torch.optim.Optimizer]] = None,
+        normalization_function: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
         learning_rate: float = 5.0e-6,
         lr_scheduler: Optional[Type[LRScheduler]] = None,
         lr_scheduler_options: dict[str, Any] = {},
         device: str = "cpu",
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Construct the ByolTrainer instance.
 
@@ -49,6 +48,8 @@ class ByolTrainer(nn.Module):
             device: device on which the training will take place
         """
         super().__init__()
+
+        self.lr_scheduler: Optional[LRScheduler] = None
 
         self.augmentation_function = (
             augmentation_function
@@ -78,7 +79,7 @@ class ByolTrainer(nn.Module):
         self.to_device(device)
         self._batch_index = 0
 
-    def forward(self, x: torch.Tensor, return_errors: bool = False):
+    def forward(self, x: torch.Tensor, return_errors: bool = False) -> torch.Tensor:
         """Run data through the model.
 
         The model will return either embeddings, or the errors.
@@ -90,14 +91,15 @@ class ByolTrainer(nn.Module):
         Returns:
             Embeddings or errors
         """
-        return self.byol(x, return_errors=return_errors)
+        result: torch.Tensor = self.byol(x, return_errors=return_errors)
+        return result
 
     def train_epoch(
         self,
-        train_data: DataLoader,
+        train_data: DataLoader[torch.Tensor],
         batch_size: int = 16,
         summary_writer: Optional[SummaryWriter] = None,
-    ):
+    ) -> torch.Tensor:
         """Train the model for a single epoch.
 
         Args:
@@ -107,7 +109,7 @@ class ByolTrainer(nn.Module):
         Returns:
             the total loss
         """
-        total_loss = 0.0
+        total_loss = torch.tensor(0.0, device=self.device)
         batch_loss = None
 
         for i, image in enumerate(tqdm(train_data)):
@@ -135,7 +137,7 @@ class ByolTrainer(nn.Module):
 
         return total_loss
 
-    def test(self, test_data: DataLoader):
+    def test(self, test_data: DataLoader[torch.Tensor]) -> torch.Tensor:
         """Get out-of-sample errors on a test data set.
 
         Args:
@@ -144,7 +146,7 @@ class ByolTrainer(nn.Module):
         Returns:
             the out-of-sample test errors
         """
-        loss = 0
+        loss = torch.tensor(0.0, device=self.device)
         with torch.no_grad():
             self.byol.eval()
             for item in test_data:
@@ -157,14 +159,14 @@ class ByolTrainer(nn.Module):
 
     def train_model(
         self,
-        train_data: DataLoader,
-        test_data: DataLoader,
+        train_data: DataLoader[torch.Tensor],
+        test_data: DataLoader[torch.Tensor],
         epochs: int = 10,
         writer: Optional[SummaryWriter] = None,
         log_dir: str = "runs/",
         save_file: Optional[str] = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         """Train the BYOL model for a given number of epochs.
 
         Args:
@@ -204,6 +206,6 @@ class ByolTrainer(nn.Module):
             torch.save(self, save_file)
             logger.info(f"Model saved to {save_file}")
 
-    def to_device(self, device, *args, **kwargs):
+    def to_device(self, device: str, *args: Any, **kwargs: Any) -> None:
         self.to(device, *args, **kwargs)
         self.device = device

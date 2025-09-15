@@ -22,3 +22,38 @@ dependencies = [
 
 [tool.setuptools]
 include-package-data = true
+
+# [project.scripts]
+# astromorph = "astromorph:__main__"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+    "pytest-cov>=6.2.1",
+    "pytest-env>=1.1.5",
+    "mypy>=1.17.1",
+    "typing-extensions>=4.12.2,<4.13.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "--no-header -vx --cov"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["astromorph"]
+
+[tool.coverage.report]
+skip_covered = true
+
+[tool.mypy]
+files = ["astromorph"]
+strict = true
+ignore_missing_imports = true
+allow_untyped_calls = true
+implicit_reexport = true
+
+[tool.uv]
+default-groups = []
+
+[tool.setuptools.packages.find]
+exclude = [ "Dockerfile"]
