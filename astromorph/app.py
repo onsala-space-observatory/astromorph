@@ -1,7 +1,7 @@
+import tomllib
 from pathlib import Path
 from typing import Optional
 
-import tomllib
 import torch
 import typer
 from click import Context
