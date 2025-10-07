@@ -1,7 +1,7 @@
 import torch
 
 
-def make_4D(image: torch.Tensor, stacksize: int = 1):
+def make_4D(image: torch.Tensor, stacksize: int = 1) -> torch.Tensor:
     """Produce a version of the image that can be run on the inference network
 
     Args:
@@ -18,7 +18,7 @@ def make_4D(image: torch.Tensor, stacksize: int = 1):
     return torch.concatenate((image,) * stacksize, 1)
 
 
-def augment_image(image: torch.Tensor, stacksize: int = 1):
+def augment_image(image: torch.Tensor, stacksize: int = 1) -> torch.Tensor:
     """Create a 4D stack for image training.
 
     Training the model requires multiple images in a single go, because

@@ -1,16 +1,16 @@
 import os
-from typing import Annotated
+from typing import Annotated, Any
 
 from pydantic import BaseModel, Field
 from pydantic.functional_validators import AfterValidator
 
 
-def path_exists(filename: str):
+def path_exists(filename: str) -> str:
     assert os.path.exists(filename), f"{filename} does not exist"
     return filename
 
 
-def is_file(filename: str):
+def is_file(filename: str) -> str:
     assert os.path.isfile(filename), f"{filename} is not a file"
     return filename
 
@@ -20,14 +20,14 @@ FileName = Annotated[str, AfterValidator(path_exists), AfterValidator(is_file)]
 
 class FileSettings(BaseModel):
     datafile: FileName
-    data_settings: dict = Field(default={})
+    data_settings: dict[str, Any] = Field(default={})
 
 
 class TrainingSettings(FileSettings):
     epochs: int = Field(default=10, gt=0)
     network_name: str
-    network_settings: dict
-    byol_settings: dict
+    network_settings: dict[str, Any]
+    byol_settings: dict[str, Any]
     core_limit: int = Field(default=0, ge=0)
     learning_rate: float = Field(default=5e-6)
     exponential_lr: bool = Field(default=False)

@@ -1,10 +1,11 @@
 from typing import Union
 
 import torch
-from torch import nn
 from loguru import logger
+from torch import nn
 
 from .mlp import MultiLayerPerceptron
+
 
 class NetWrapper(nn.Module):
     """Class to wrap around another neural network.
@@ -18,6 +19,7 @@ class NetWrapper(nn.Module):
         hidden: dictionary to store intercepted output
         projector: an MLP to do projection of the embeddings
     """
+
     def __init__(
         self,
         network: nn.Module,
@@ -41,11 +43,13 @@ class NetWrapper(nn.Module):
         self.layer: Union[str, int] = layer
 
         # Variable to store the data emitted by the hiddenn layer in the network
-        self.hidden = {}
+        self.hidden: dict[torch.device, torch.Tensor] = {}
         # Register forward hook at the right layer
         self._register_hook()
 
-        self.projector = MultiLayerPerceptron(representation_size, projection_hidden_size, projection_size)
+        self.projector = MultiLayerPerceptron(
+            representation_size, projection_hidden_size, projection_size
+        )
 
     def _find_layer(self) -> nn.Module:
         """Find layer that will be intercepted
@@ -55,16 +59,19 @@ class NetWrapper(nn.Module):
         """
         try:
             if isinstance(self.layer, int):
-                children = list(self.network.children())
+                children: list[nn.Module] = list(self.network.children())
                 return children[self.layer]
             elif isinstance(self.layer, str):
-                modules = dict(list(self.network.named_modules()))
+                modules: dict[str, nn.Module] = dict(list(self.network.named_modules()))
                 return modules[self.layer]
         except KeyError:
             logger.error("Layer {} not found in model", self.layer)
             raise SystemExit
+        raise RuntimeError(f"Layer {self.layer} not found")
 
-    def _hook(self, model: nn.Module, input: torch.Tensor, output: torch.Tensor):
+    def _hook(
+        self, model: nn.Module, input: tuple[torch.Tensor, ...], output: torch.Tensor
+    ) -> None:
         """Hook function to emit output to self.hidden via a forward hook.
 
         Args:
@@ -77,7 +84,7 @@ class NetWrapper(nn.Module):
         # Store the output based on device name
         self.hidden[device] = output.reshape(output.shape[0], -1)
 
-    def _register_hook(self):
+    def _register_hook(self) -> None:
         """Register the _hook function with the layer we want to intercept."""
         layer = self._find_layer()
         layer.register_forward_hook(self._hook)
@@ -99,15 +106,18 @@ class NetWrapper(nn.Module):
 
         if output is None:
             logger.error("Layer {} never emitted any output", self.layer)
+            raise RuntimeError(f"Layer {self.layer} never emitted any output")
         else:
             return output
 
-    def forward(self, x: torch.Tensor, return_projection: bool = True):
+    def forward(
+        self, x: torch.Tensor, return_projection: bool = True
+    ) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
         representation = self.get_representation(x)
 
         if not return_projection:
             return representation
-        
+
         projection = self.projector(representation)
 
         return projection, representation

@@ -13,7 +13,7 @@ from astromorph.models import DEFAULT_MODELS
 from astromorph.settings import TrainingSettings
 
 
-def main(full_dataset: Dataset, settings: TrainingSettings):
+def main(full_dataset: Dataset[torch.Tensor], settings: TrainingSettings) -> None:
     epochs = settings.epochs
     network_name = settings.network_name
     network_settings = settings.network_settings
@@ -31,7 +31,9 @@ def main(full_dataset: Dataset, settings: TrainingSettings):
     device = (
         "cuda"
         if torch.cuda.is_available()
-        else "mps" if torch.backends.mps.is_available() else "cpu"
+        else "mps"
+        if torch.backends.mps.is_available()
+        else "cpu"
     )
     logger.debug("Using device {}", device)
 

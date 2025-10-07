@@ -12,7 +12,7 @@ from astromorph.datasets import FitsFilelistDataset
 from astromorph.settings import InferenceSettings, TrainingSettings
 
 
-class OrderCommands(TyperGroup):  # type: ignore
+class OrderCommands(TyperGroup):
     def list_commands(self, ctx: Context) -> list[str]:
         return list(self.commands)
 
@@ -32,7 +32,7 @@ def training(
     configfile: Path = typer.Option(
         ..., "--configfile", "-c", help="Specify a configfile"
     ),
-):
+) -> None:
     """Run the training pipeline."""
 
     with open(configfile, "rb") as file:
@@ -62,7 +62,7 @@ def inference(
     configfile: Optional[Path] = typer.Option(
         None, "--configfile", "-c", help="Specify a config file"
     ),
-):
+) -> None:
     """Run the inference pipeline."""
 
     # If there is a config file, load those settings first

@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Any, Union
 
 import torch
 
@@ -18,7 +18,7 @@ from .helpers import augment_image, make_4D
 class FitsFilelistDataset(BaseDataset):
     """A class to gather multiple FITS images in a Dataset."""
 
-    def __init__(self, filelist: Union[str, list], *args, **kwargs):
+    def __init__(self, filelist: Union[str, list[str]], *args: Any, **kwargs: Any):
         """Create a FitsFilelistDataset.
 
         This will only store the filenames in memory.
@@ -36,7 +36,7 @@ class FitsFilelistDataset(BaseDataset):
                 # Make sure to remove the newline characters at the end of each filename
                 self.filenames = [fname.strip("\n") for fname in file.readlines()]
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the size of the dataset.
 
         Returns:
@@ -44,7 +44,7 @@ class FitsFilelistDataset(BaseDataset):
         """
         return len(self.filenames)
 
-    def __getitem__(self, index: int):
+    def __getitem__(self, index: int) -> torch.Tensor:
         """Retrieve the item at index.
 
         This will first open the FITS file, and retrieve multiple versions
@@ -84,7 +84,7 @@ class FitsFilelistDataset(BaseDataset):
         data = fits.getdata(filename).astype(float)
         return torch.from_numpy(data).float()
 
-    def get_all_items(self):
+    def get_all_items(self) -> list[torch.Tensor]:
         """Produce all items as inferable images
 
         Returns:
@@ -95,7 +95,7 @@ class FitsFilelistDataset(BaseDataset):
             for filename in self.filenames
         ]
 
-    def get_object_property(self, keyword: str):
+    def get_object_property(self, keyword: str) -> list[str]:
         """Retrieve an object property from the FITS header
 
         Args:
