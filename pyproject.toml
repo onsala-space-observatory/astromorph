@@ -1,6 +1,6 @@
 [project]
 name = "astromorph"
-version = "0.1.0"
+version = "0.1.2"
 description = "Astromorph tool"
 readme = "README.md"
 requires-python = ">=3.12.0, <3.13.0"
@@ -20,11 +20,15 @@ dependencies = [
     "typer>=0.15.2",
 ]
 
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [tool.setuptools]
 include-package-data = true
 
-# [project.scripts]
-# astromorph = "astromorph:__main__"
+[project.scripts]
+astromorph = "astromorph:__main__"
 
 [dependency-groups]
 dev = [
@@ -38,6 +42,7 @@ dev = [
 [tool.pytest.ini_options]
 addopts = "--no-header -vx --cov"
 testpaths = ["tests"]
+pythonpath = ["."]
 
 [tool.coverage.run]
 source = ["astromorph"]
@@ -53,7 +58,20 @@ allow_untyped_calls = true
 implicit_reexport = true
 
 [tool.uv]
+package = true
 default-groups = []
 
 [tool.setuptools.packages.find]
 exclude = [ "Dockerfile"]
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple/"
+publish-url = "https://upload.pypi.org/legacy/"
+explicit = true
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
